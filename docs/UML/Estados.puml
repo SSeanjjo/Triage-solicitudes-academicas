@@ -1,0 +1,13 @@
+@startuml
+title Estados de la Solicitud Académica
+
+[*] --> REGISTRADA
+
+REGISTRADA --> CLASIFICADA : clasificar()
+CLASIFICADA --> EN_ATENCION : asignarResponsable()
+EN_ATENCION --> ATENDIDA : resolver()
+ATENDIDA --> CERRADA : cerrar()
+
+CERRADA --> [*]
+
+@enduml

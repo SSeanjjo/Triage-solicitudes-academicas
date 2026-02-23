@@ -1,0 +1,39 @@
+@startuml
+title Secuencia - Gestión de Solicitud Académica
+
+actor Usuario
+participant "Sistema Triage" as Sistema
+participant "Servicio Solicitudes" as Servicio
+participant "Motor Reglas" as Reglas
+participant "Responsable" as Responsable
+database "BD" as BD
+
+Usuario -> Sistema : login(correo, password)
+Sistema -> Servicio : autenticar()
+Servicio -> BD : validarCredenciales()
+BD --> Servicio : ok
+Servicio --> Sistema : JWT
+
+Usuario -> Sistema : registrarSolicitud(datos)
+Sistema -> Servicio : crearSolicitud(datos)
+Servicio -> BD : guardarSolicitud()
+BD --> Servicio : solicitudId
+
+Servicio -> Reglas : clasificarSolicitud()
+Reglas --> Servicio : tipo + prioridad
+
+Servicio -> BD : actualizarClasificacion()
+
+Servicio -> Responsable : asignarSolicitud()
+Responsable --> Servicio : aceptada
+
+Servicio -> BD : registrarHistorial()
+
+Usuario -> Sistema : cerrarSolicitud(id)
+Sistema -> Servicio : cerrarSolicitud(id)
+Servicio -> BD : actualizarEstado(CERRADA)
+Servicio -> BD : registrarHistorial()
+
+Sistema --> Usuario : confirmación
+
+@enduml

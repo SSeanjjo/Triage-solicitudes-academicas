@@ -1,0 +1,42 @@
+@startuml
+title Flujo Principal - Triage de Solicitudes Académicas
+
+start
+
+:RF-13 Autenticar usuario;
+
+if (¿Login válido?) then (Sí)
+
+  :RF-01 Registrar solicitud;
+  :Guardar canal de origen;
+
+  :RF-02 Clasificar solicitud por tipo;
+
+  if (¿IA habilitada?) then (Sí)
+    :RF-10 Sugerir clasificación con IA;
+  endif
+
+  :RF-03 Priorizar solicitud;
+  :RF-04 Gestionar estado (REGISTRADA → CLASIFICADA);
+
+  :RF-05 Asignar responsable;
+
+  :RF-06 Registrar historial;
+
+  :RF-07 Consultar por criterios (opcional);
+
+  if (¿Solicitud resuelta?) then (Sí)
+    :RF-08 Cerrar solicitud;
+
+    if (¿IA habilitada?) then (Sí)
+      :RF-09 Generar resumen IA;
+    endif
+
+  endif
+
+else (No)
+  :Rechazar acceso;
+endif
+
+stop
+@enduml
