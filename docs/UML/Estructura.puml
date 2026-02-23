@@ -1,0 +1,86 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' =====================
+' ENUMERACIONES
+' =====================
+
+enum EstadoSolicitud {
+  REGISTRADA
+  CLASIFICADA
+  EN_ATENCION
+  ATENDIDA
+  CERRADA
+}
+
+enum Rol {
+  ESTUDIANTE
+  RESPONSABLE
+  ADMINISTRADOR
+}
+
+' =====================
+' CLASES PRINCIPALES
+' =====================
+
+class Solicitud {
+  - id: Long
+  - descripcion: String
+  - fechaRegistro: LocalDateTime
+  - estado: EstadoSolicitud
+}
+
+class TipoSolicitud {
+  - id: Long
+  - nombre: String
+  - descripcion: String
+}
+
+class CanalOrigen {
+  - id: Long
+  - nombre: String
+}
+
+class Prioridad {
+  - id: Long
+  - nivel: String
+  - justificacion: String
+}
+
+class HistorialSolicitud {
+  - id: Long
+  - fecha: LocalDateTime
+  - accion: String
+  - observacion: String
+}
+
+class AsignacionResponsable {
+  - id: Long
+  - fechaAsignacion: LocalDateTime
+}
+
+class Usuario {
+  - id: Long
+  - nombre: String
+  - correo: String
+  - password: String
+  - activo: boolean
+  - rol: Rol
+}
+
+' =====================
+' RELACIONES
+' =====================
+
+Solicitud "1" --> "1" TipoSolicitud
+Solicitud "1" --> "1" CanalOrigen
+Solicitud "1" --> "1" Prioridad
+Solicitud "1" --> "1" Usuario : solicitante
+
+Solicitud "1" --> "*" HistorialSolicitud
+HistorialSolicitud "*" --> "1" Usuario : usuarioResponsable
+
+Solicitud "1" --> "*" AsignacionResponsable
+AsignacionResponsable "*" --> "1" Usuario : responsable
+
+@enduml

@@ -1,0 +1,262 @@
+openapi: 3.0.3
+info:
+  title: API Sistema de Triage Académico
+  description: API REST para la gestión de solicitudes académicas.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+
+tags:
+  - name: Autenticación
+  - name: Usuarios
+  - name: Solicitudes
+  - name: Historial
+  - name: Asignaciones
+  - name: TiposSolicitud
+  - name: Canales
+  - name: Reportes
+  - name: IA
+
+paths:
+
+  /api/auth/login:
+    post:
+      tags: [Autenticación]
+      summary: Autenticación y obtención de JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  /api/usuarios:
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          description: Usuario creado
+
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      parameters:
+        - in: query
+          name: activo
+          schema:
+            type: boolean
+        - in: query
+          name: rol
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de usuarios
+
+  /api/usuarios/{id}:
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      responses:
+        '200':
+          description: Usuario encontrado
+
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioUpdate'
+      responses:
+        '200':
+          description: Usuario actualizado
+
+  /api/solicitudes:
+    post:
+      tags: [Solicitudes]
+      summary: Registrar solicitud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitudCreate'
+      responses:
+        '201':
+          description: Solicitud creada
+
+    get:
+      tags: [Solicitudes]
+      summary: Consultar solicitudes con filtros
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+        - in: query
+          name: tipoSolicitudId
+          schema:
+            type: integer
+        - in: query
+          name: prioridad
+          schema:
+            type: string
+        - in: query
+          name: responsableId
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de solicitudes
+
+  /api/solicitudes/{id}:
+    get:
+      tags: [Solicitudes]
+      summary: Obtener detalle de solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      responses:
+        '200':
+          description: Detalle de solicitud
+
+  /api/solicitudes/{id}/clasificar:
+    patch:
+      tags: [Solicitudes]
+      summary: Clasificar solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClasificacionRequest'
+      responses:
+        '200':
+          description: Solicitud clasificada
+
+  /api/reportes/solicitudes-por-estado:
+    get:
+      tags: [Reportes]
+      summary: Conteo por estado
+      parameters:
+        - in: query
+          name: fechaInicio
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: fechaFin
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reporte generado
+
+components:
+
+  parameters:
+    UsuarioId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    SolicitudId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+
+    LoginRequest:
+      type: object
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          example: user@uni.edu
+        password:
+          type: string
+          example: Pass123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        tipo:
+          type: string
+          example: Bearer
+        rol:
+          type: string
+        nombre:
+          type: string
+
+    UsuarioCreate:
+      type: object
+      required: [nombre, correo, password, rol]
+      properties:
+        nombre:
+          type: string
+        correo:
+          type: string
+        password:
+          type: string
+        rol:
+          type: string
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        correo:
+          type: string
+
+    SolicitudCreate:
+      type: object
+      required: [tipoSolicitudId, descripcion, canalOrigenId, solicitanteId]
+      properties:
+        tipoSolicitudId:
+          type: integer
+        descripcion:
+          type: string
+        canalOrigenId:
+          type: integer
+        solicitanteId:
+          type: integer
+
+    ClasificacionRequest:
+      type: object
+      required: [tipoSolicitudId]
+      properties:
+        tipoSolicitudId:
+          type: integer
