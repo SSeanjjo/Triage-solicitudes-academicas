@@ -6,6 +6,7 @@ skinparam classAttributeIconSize 0
 ' =====================
 
 enum EstadoSolicitud {
+
   REGISTRADA
   CLASIFICADA
   EN_ATENCION

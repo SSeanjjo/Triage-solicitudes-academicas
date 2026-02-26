@@ -1,0 +1,527 @@
+{
+    "version": "2.0.0",
+    "runtimeConfiguration": {
+        "environment": "default",
+        "laxTestingModeEnabled": false,
+        "apiConnectivityCheck": true,
+        "logLevel": "error",
+        "logDestination": "stdout+platform",
+        "logMaxFileSize": 2147483648,
+        "requestHeaderNameRequestId": "x-scan-request-id",
+        "requestHeaderNameScenarioId": "x-scan-scenario-id",
+        "requestHeaderNameRequestType": "x-scan-request-type",
+        "requestFlowrate": 100,
+        "requestTimeout": 30,
+        "requestTlsInsecureSkipVerify": true,
+        "responseFollowRedirection": false,
+        "responseMaxBodySizeScan": 10485760,
+        "happyPathOnly": false,
+        "maxRequestRetryAttempts": 5,
+        "maxScanDuration": 1800,
+        "memoryLimit": 2147483648,
+        "memoryTimeSpan": 10,
+        "reportMaxRequestSizeHappyPath": 8092,
+        "reportMaxRequestSizeTest": 8092,
+        "reportIncludeRequestBody": true,
+        "reportIncludeResponseBody": true,
+        "reportMaxHttpResponseSizeHappyPath": 8092,
+        "reportMaxBodySizeHappyPath": 8092,
+        "reportMaxHttpResponseSizeTest": 8092,
+        "reportMaxBodySizeTest": 8092,
+        "reportIssuesOnly": false,
+        "reportMaxIssues": 1000,
+        "reportMaxSize": 20971520,
+        "reportGenerateCurlCommand": true,
+        "normalizeServerUrls": true
+    },
+    "customizations": {
+        "happyPaths": {
+            "retry": 1,
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            },
+            "httpStatusExpected": []
+        },
+        "tests": {
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            }
+        }
+    },
+    "operations": {
+        "/api/auth/login:post": {
+            "operationId": "/api/auth/login:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1auth~1login:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/auth/login:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/auth/login",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "correo": "user@uni.edu",
+                                "password": "Pass123"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reportes/solicitudes-por-estado:get": {
+            "operationId": "/api/reportes/solicitudes-por-estado:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1reportes~1solicitudes-por-estado:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/reportes/solicitudes-por-estado:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/reportes/solicitudes-por-estado",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "fechaInicio",
+                                "value": "sotsfdffwygdgtjaygafsdgfvknkhfdg"
+                            },
+                            {
+                                "key": "fechaFin",
+                                "value": "mujnrcxxvkizopftrqjiramysfwjamyp"
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/solicitudes/{id}/clasificar:patch": {
+            "operationId": "/api/solicitudes/{id}/clasificar:patch",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1solicitudes~1{id}~1clasificar:patch/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/solicitudes/{id}/clasificar:patch",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/solicitudes/{id}/clasificar",
+                        "method": "PATCH",
+                        "paths": [
+                            {
+                                "key": "id",
+                                "value": 2619185567126185397
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "tipoSolicitudId": 1382455395506573470
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/solicitudes/{id}:get": {
+            "operationId": "/api/solicitudes/{id}:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1solicitudes~1{id}:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/solicitudes/{id}:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/solicitudes/{id}",
+                        "method": "GET",
+                        "paths": [
+                            {
+                                "key": "id",
+                                "value": 294202930107168212
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/solicitudes:get": {
+            "operationId": "/api/solicitudes:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1solicitudes:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/solicitudes:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/solicitudes",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "estado",
+                                "value": "iiaahbuiohjdcjxzdmrhcoowegngovdr"
+                            },
+                            {
+                                "key": "tipoSolicitudId",
+                                "value": 321400330327869485
+                            },
+                            {
+                                "key": "prioridad",
+                                "value": "wtpswmmaxnlmwuuaucgbhszqnlzqsfvb"
+                            },
+                            {
+                                "key": "responsableId",
+                                "value": 6800279444015349244
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/solicitudes:post": {
+            "operationId": "/api/solicitudes:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1solicitudes:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/solicitudes:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/solicitudes",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "canalOrigenId": 6361428437121448112,
+                                "descripcion": "qzhuxprbswlmadxvkdjcdraglmpbheze",
+                                "solicitanteId": 8713341261783029004,
+                                "tipoSolicitudId": 1273537713708832864
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "201",
+                "responses": {
+                    "201": {
+                        "expectations": {
+                            "httpStatus": 201
+                        }
+                    }
+                }
+            }
+        },
+        "/api/usuarios/{id}:get": {
+            "operationId": "/api/usuarios/{id}:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1usuarios~1{id}:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/usuarios/{id}:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/usuarios/{id}",
+                        "method": "GET",
+                        "paths": [
+                            {
+                                "key": "id",
+                                "value": 3840901856239115983
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/usuarios/{id}:put": {
+            "operationId": "/api/usuarios/{id}:put",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1usuarios~1{id}:put/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/usuarios/{id}:put",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/usuarios/{id}",
+                        "method": "PUT",
+                        "paths": [
+                            {
+                                "key": "id",
+                                "value": 9182518767873324428
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "correo": "numtaunmufhwmdsvgxhdcmcvkstbwsxp",
+                                "nombre": "fpholzgphzxbqnivnjbjlnzgnkhahssi"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/usuarios:get": {
+            "operationId": "/api/usuarios:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1usuarios:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/usuarios:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/usuarios",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "rol",
+                                "value": "sgchhxymrgqoxmqhyaacjivqlyzxhmsk"
+                            },
+                            {
+                                "key": "activo",
+                                "value": true
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/api/usuarios:post": {
+            "operationId": "/api/usuarios:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1api~1usuarios:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/api/usuarios:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/usuarios",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "correo": "hwzlqqqmaawpzzqehlpazbcuiscqtpac",
+                                "nombre": "zeujjnhfbuyxjiccfpttfvwrhphdcpsl",
+                                "password": "pbvqxbyjhwgfukhkgxbfqoavwtlynrhx",
+                                "rol": "pfevtwzbocpmtckciotceudlijqtfxnj"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "201",
+                "responses": {
+                    "201": {
+                        "expectations": {
+                            "httpStatus": 201
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "environments": {
+        "default": {
+            "variables": {
+                "host": {
+                    "from": "environment",
+                    "name": "SCAN42C_HOST",
+                    "required": false,
+                    "default": "http://localhost:8080"
+                }
+            }
+        }
+    }
+}

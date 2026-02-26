@@ -1,0 +1,471 @@
+openapi: 3.0.3
+info:
+  title: API Sistema de Triage Académico
+  description: API REST para la gestión centralizada de solicitudes académicas.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Autenticacion
+  - name: Usuarios
+  - name: Solicitudes
+  - name: Historial
+  - name: Asignaciones
+  - name: Reportes
+
+paths:
+
+  /api/auth/login:
+    post:
+      tags: [Autenticacion]
+      summary: Autenticacion y obtención de JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Credenciales inválidas
+
+  /api/usuarios:
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          description: Usuario creado
+        '400':
+          description: Datos inválidos
+        '403':
+          description: No autorizado
+
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      parameters:
+        - in: query
+          name: activo
+          schema:
+            type: boolean
+        - in: query
+          name: rol
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de usuarios
+        '403':
+          description: No autorizado
+
+  /api/usuarios/{id}:
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      responses:
+        '200':
+          description: Usuario encontrado
+        '404':
+          description: Usuario no encontrado
+
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioUpdate'
+      responses:
+        '200':
+          description: Usuario actualizado
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Usuario no encontrado
+
+  /api/solicitudes:
+    post:
+      tags: [Solicitudes]
+      summary: Registrar solicitud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitudCreate'
+      responses:
+        '201':
+          description: Solicitud creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '400':
+          description: Datos inválidos
+        '403':
+          description: No autorizado
+
+    get:
+      tags: [Solicitudes]
+      summary: Consultar solicitudes con filtros
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            $ref: '#/components/schemas/EstadoSolicitud'
+        - in: query
+          name: tipoSolicitudId
+          schema:
+            type: integer
+        - in: query
+          name: prioridad
+          schema:
+            $ref: '#/components/schemas/PrioridadSolicitud'
+        - in: query
+          name: responsableId
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de solicitudes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Solicitud'
+        '403':
+          description: No autorizado
+
+  /api/solicitudes/{id}:
+    get:
+      tags: [Solicitudes]
+      summary: Obtener detalle de solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      responses:
+        '200':
+          description: Detalle de solicitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '404':
+          description: Solicitud no encontrada
+
+  /api/solicitudes/{id}/clasificar:
+    patch:
+      tags: [Solicitudes]
+      summary: Clasificar solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClasificacionRequest'
+      responses:
+        '200':
+          description: Solicitud clasificada
+        '404':
+          description: Solicitud no encontrada
+
+  /api/solicitudes/{id}/priorizar:
+    patch:
+      tags: [Solicitudes]
+      summary: Priorizar solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriorizacionRequest'
+      responses:
+        '200':
+          description: Solicitud priorizada
+        '404':
+          description: Solicitud no encontrada
+
+  /api/solicitudes/{id}/asignar:
+    patch:
+      tags: [Asignaciones]
+      summary: Asignar responsable a solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionRequest'
+      responses:
+        '200':
+          description: Solicitud asignada
+        '404':
+          description: Solicitud no encontrada
+
+  /api/solicitudes/{id}/cerrar:
+    patch:
+      tags: [Solicitudes]
+      summary: Cerrar solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CierreRequest'
+      responses:
+        '200':
+          description: Solicitud cerrada
+        '404':
+          description: Solicitud no encontrada
+
+  /api/solicitudes/{id}/historial:
+    get:
+      tags: [Historial]
+      summary: Obtener historial de la solicitud
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      responses:
+        '200':
+          description: Historial obtenido
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistorialEvento'
+        '404':
+          description: Solicitud no encontrada
+
+  /api/reportes/solicitudes-por-estado:
+    get:
+      tags: [Reportes]
+      summary: Conteo por estado
+      parameters:
+        - in: query
+          name: fechaInicio
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: fechaFin
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reporte generado
+        '403':
+          description: No autorizado
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    UsuarioId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    SolicitudId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+
+    EstadoSolicitud:
+      type: string
+      description: Estado del ciclo de vida de la solicitud
+      enum:
+        - REGISTRADA
+        - CLASIFICADA
+        - PRIORIZADA
+        - ASIGNADA
+        - EN_GESTION
+        - CERRADA
+
+    PrioridadSolicitud:
+      type: string
+      enum:
+        - BAJA
+        - MEDIA
+        - ALTA
+        - CRITICA
+
+    Solicitud:
+      type: object
+      properties:
+        id:
+          type: integer
+        estado:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        prioridad:
+          $ref: '#/components/schemas/PrioridadSolicitud'
+        tipoSolicitudId:
+          type: integer
+        canalOrigenId:
+          type: integer
+        solicitanteId:
+          type: integer
+        responsableId:
+          type: integer
+          nullable: true
+        descripcion:
+          type: string
+        fechaCreacion:
+          type: string
+          format: date-time
+        fechaActualizacion:
+          type: string
+          format: date-time
+
+    HistorialEvento:
+      type: object
+      properties:
+        id:
+          type: integer
+        solicitudId:
+          type: integer
+        usuarioId:
+          type: integer
+        accion:
+          type: string
+        estadoAnterior:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        estadoNuevo:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        fecha:
+          type: string
+          format: date-time
+        comentario:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          format: email
+          example: user@uquindio.edu
+        password:
+          type: string
+          example: Pass123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        tipo:
+          type: string
+          example: Bearer
+        rol:
+          type: string
+        nombre:
+          type: string
+
+    UsuarioCreate:
+      type: object
+      required: [nombre, correo, password, rol]
+      properties:
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+        rol:
+          type: string
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+
+    SolicitudCreate:
+      type: object
+      required: [tipoSolicitudId, descripcion, canalOrigenId, solicitanteId]
+      properties:
+        tipoSolicitudId:
+          type: integer
+        descripcion:
+          type: string
+        canalOrigenId:
+          type: integer
+        solicitanteId:
+          type: integer
+
+    ClasificacionRequest:
+      type: object
+      required: [tipoSolicitudId]
+      properties:
+        tipoSolicitudId:
+          type: integer
+
+    PriorizacionRequest:
+      type: object
+      required: [prioridad]
+      properties:
+        prioridad:
+          $ref: '#/components/schemas/PrioridadSolicitud'
+
+    AsignacionRequest:
+      type: object
+      required: [responsableId]
+      properties:
+        responsableId:
+          type: integer
+
+    CierreRequest:
+      type: object
+      properties:
+        comentarioCierre:
+          type: string
