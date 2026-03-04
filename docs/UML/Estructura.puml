@@ -4,8 +4,7 @@ skinparam classAttributeIconSize 0
 enum EstadoSolicitud {
   REGISTRADA
   CLASIFICADA
-  PRIORIZADA
-  ASIGNADA
+  ATENDIDA
   EN_GESTION
   CERRADA
 }
@@ -44,6 +43,9 @@ class Solicitud {
   - fechaActualizacion: LocalDateTime
   - estado: EstadoSolicitud
   - prioridad: PrioridadSolicitud
+  - tipo: TipoSolicitud
+  - canalOrigen: CanalOrigen
+
 }
 
 class HistorialSolicitud {
@@ -72,10 +74,11 @@ class Usuario {
 Solicitud "1" --> "1" Usuario : solicitante
 Solicitud "1" --> "0..1" Usuario : responsable
 
-Solicitud "1" --> "*" HistorialSolicitud
+Solicitud "1" *-- "1..*" HistorialSolicitud
+Solicitud "1" *-- "0..*" AsignacionResponsable
 HistorialSolicitud "*" --> "1" Usuario : usuarioAccion
 
-Solicitud "1" --> "*" AsignacionResponsable
+
 AsignacionResponsable "*" --> "1" Usuario : responsable
 
 @enduml
