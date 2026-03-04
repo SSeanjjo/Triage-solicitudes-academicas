@@ -71,7 +71,7 @@ paths:
         - in: query
           name: rol
           schema:
-            type: string
+            $ref: '#/components/schemas/Rol'
       responses:
         '200':
           description: Lista de usuarios
@@ -140,10 +140,6 @@ paths:
           schema:
             $ref: '#/components/schemas/EstadoSolicitud'
         - in: query
-          name: tipoSolicitudId
-          schema:
-            type: integer
-        - in: query
           name: prioridad
           schema:
             $ref: '#/components/schemas/PrioridadSolicitud'
@@ -194,26 +190,14 @@ paths:
       responses:
         '200':
           description: Solicitud clasificada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
         '404':
           description: Solicitud no encontrada
-
-  /api/solicitudes/{id}/priorizar:
-    patch:
-      tags: [Solicitudes]
-      summary: Priorizar solicitud
-      parameters:
-        - $ref: '#/components/parameters/SolicitudId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PriorizacionRequest'
-      responses:
-        '200':
-          description: Solicitud priorizada
-        '404':
-          description: Solicitud no encontrada
+        '409':
+          description: Transición de estado inválida
 
   /api/solicitudes/{id}/asignar:
     patch:
@@ -230,8 +214,14 @@ paths:
       responses:
         '200':
           description: Solicitud asignada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
         '404':
           description: Solicitud no encontrada
+        '409':
+          description: Transición de estado inválida
 
   /api/solicitudes/{id}/cerrar:
     patch:
@@ -248,8 +238,14 @@ paths:
       responses:
         '200':
           description: Solicitud cerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
         '404':
           description: Solicitud no encontrada
+        '409':
+          description: Transición de estado inválida
 
   /api/solicitudes/{id}/historial:
     get:
@@ -268,27 +264,6 @@ paths:
                   $ref: '#/components/schemas/HistorialEvento'
         '404':
           description: Solicitud no encontrada
-
-  /api/reportes/solicitudes-por-estado:
-    get:
-      tags: [Reportes]
-      summary: Conteo por estado
-      parameters:
-        - in: query
-          name: fechaInicio
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: fechaFin
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: Reporte generado
-        '403':
-          description: No autorizado
 
 components:
 
@@ -315,9 +290,15 @@ components:
 
   schemas:
 
+    Rol:
+      type: string
+      enum:
+        - ESTUDIANTE
+        - RESPONSABLE
+        - ADMINISTRADOR
+
     EstadoSolicitud:
       type: string
-      description: Estado del ciclo de vida de la solicitud
       enum:
         - REGISTRADA
         - CLASIFICADA
@@ -334,6 +315,22 @@ components:
         - ALTA
         - CRITICA
 
+    TipoSolicitud:
+      type: string
+      enum:
+        - HOMOLOGACION
+        - CUPO
+        - CANCELACION
+        - OTRO
+
+    CanalOrigen:
+      type: string
+      enum:
+        - CORREO
+        - PRESENCIAL
+        - WEB
+        - SISTEMA_ANTIGUO
+
     Solicitud:
       type: object
       properties:
@@ -343,10 +340,10 @@ components:
           $ref: '#/components/schemas/EstadoSolicitud'
         prioridad:
           $ref: '#/components/schemas/PrioridadSolicitud'
-        tipoSolicitudId:
-          type: integer
-        canalOrigenId:
-          type: integer
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        canalOrigen:
+          $ref: '#/components/schemas/CanalOrigen'
         solicitanteId:
           type: integer
         responsableId:
@@ -389,10 +386,8 @@ components:
         correo:
           type: string
           format: email
-          example: user@uquindio.edu
         password:
           type: string
-          example: Pass123
 
     LoginResponse:
       type: object
@@ -403,7 +398,7 @@ components:
           type: string
           example: Bearer
         rol:
-          type: string
+          $ref: '#/components/schemas/Rol'
         nombre:
           type: string
 
@@ -419,7 +414,7 @@ components:
         password:
           type: string
         rol:
-          type: string
+          $ref: '#/components/schemas/Rol'
 
     UsuarioUpdate:
       type: object
@@ -432,30 +427,23 @@ components:
 
     SolicitudCreate:
       type: object
-      required: [tipoSolicitudId, descripcion, canalOrigenId, solicitanteId]
+      required: [tipoSolicitud, descripcion, canalOrigen, solicitanteId]
       properties:
-        tipoSolicitudId:
-          type: integer
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
         descripcion:
           type: string
-        canalOrigenId:
-          type: integer
+        canalOrigen:
+          $ref: '#/components/schemas/CanalOrigen'
         solicitanteId:
           type: integer
 
     ClasificacionRequest:
       type: object
-      required: [tipoSolicitudId]
+      required: [tipoSolicitud]
       properties:
-        tipoSolicitudId:
-          type: integer
-
-    PriorizacionRequest:
-      type: object
-      required: [prioridad]
-      properties:
-        prioridad:
-          $ref: '#/components/schemas/PrioridadSolicitud'
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
 
     AsignacionRequest:
       type: object

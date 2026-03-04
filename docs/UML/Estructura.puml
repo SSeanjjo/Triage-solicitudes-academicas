@@ -1,16 +1,12 @@
 @startuml
 skinparam classAttributeIconSize 0
 
-' =====================
-' ENUMERACIONES
-' =====================
-
 enum EstadoSolicitud {
-
   REGISTRADA
   CLASIFICADA
-  EN_ATENCION
-  ATENDIDA
+  PRIORIZADA
+  ASIGNADA
+  EN_GESTION
   CERRADA
 }
 
@@ -20,32 +16,34 @@ enum Rol {
   ADMINISTRADOR
 }
 
-' =====================
-' CLASES PRINCIPALES
-' =====================
+enum TipoSolicitud {
+  HOMOLOGACION
+  CUPO
+  CANCELACION
+  OTRO
+}
+
+enum CanalOrigen {
+  CORREO
+  PRESENCIAL
+  WEB
+  SISTEMA_ANTIGUO
+}
+
+enum PrioridadSolicitud {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
 
 class Solicitud {
   - id: Long
   - descripcion: String
-  - fechaRegistro: LocalDateTime
+  - fechaCreacion: LocalDateTime
+  - fechaActualizacion: LocalDateTime
   - estado: EstadoSolicitud
-}
-
-class TipoSolicitud {
-  - id: Long
-  - nombre: String
-  - descripcion: String
-}
-
-class CanalOrigen {
-  - id: Long
-  - nombre: String
-}
-
-class Prioridad {
-  - id: Long
-  - nivel: String
-  - justificacion: String
+  - prioridad: PrioridadSolicitud
 }
 
 class HistorialSolicitud {
@@ -53,6 +51,8 @@ class HistorialSolicitud {
   - fecha: LocalDateTime
   - accion: String
   - observacion: String
+  - estadoAnterior: EstadoSolicitud
+  - estadoNuevo: EstadoSolicitud
 }
 
 class AsignacionResponsable {
@@ -69,17 +69,11 @@ class Usuario {
   - rol: Rol
 }
 
-' =====================
-' RELACIONES
-' =====================
-
-Solicitud "1" --> "1" TipoSolicitud
-Solicitud "1" --> "1" CanalOrigen
-Solicitud "1" --> "1" Prioridad
 Solicitud "1" --> "1" Usuario : solicitante
+Solicitud "1" --> "0..1" Usuario : responsable
 
 Solicitud "1" --> "*" HistorialSolicitud
-HistorialSolicitud "*" --> "1" Usuario : usuarioResponsable
+HistorialSolicitud "*" --> "1" Usuario : usuarioAccion
 
 Solicitud "1" --> "*" AsignacionResponsable
 AsignacionResponsable "*" --> "1" Usuario : responsable
