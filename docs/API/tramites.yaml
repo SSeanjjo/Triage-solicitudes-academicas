@@ -17,7 +17,6 @@ tags:
   - name: Solicitudes
   - name: Historial
   - name: Asignaciones
-  - name: Reportes
 
 paths:
 
@@ -140,6 +139,10 @@ paths:
           schema:
             $ref: '#/components/schemas/EstadoSolicitud'
         - in: query
+          name: tipoSolicitud
+          schema:
+            $ref: '#/components/schemas/TipoSolicitud'
+        - in: query
           name: prioridad
           schema:
             $ref: '#/components/schemas/PrioridadSolicitud'
@@ -178,7 +181,7 @@ paths:
   /api/solicitudes/{id}/clasificar:
     patch:
       tags: [Solicitudes]
-      summary: Clasificar solicitud
+      summary: Clasificar solicitud (REGISTRADA → CLASIFICADA)
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -202,7 +205,7 @@ paths:
   /api/solicitudes/{id}/asignar:
     patch:
       tags: [Asignaciones]
-      summary: Asignar responsable a solicitud
+      summary: Asignar responsable (CLASIFICADA → EN_ATENCION)
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -223,14 +226,38 @@ paths:
         '409':
           description: Transición de estado inválida
 
-  /api/solicitudes/{id}/cerrar:
+  /api/solicitudes/{id}/atender:
     patch:
       tags: [Solicitudes]
-      summary: Cerrar solicitud
+      summary: Marcar solicitud como atendida (EN_ATENCION → ATENDIDA)
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
-        required: false
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtenderRequest'
+      responses:
+        '200':
+          description: Solicitud marcada como atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '404':
+          description: Solicitud no encontrada
+        '409':
+          description: Transición de estado inválida
+
+  /api/solicitudes/{id}/cerrar:
+    patch:
+      tags: [Solicitudes]
+      summary: Cerrar solicitud (ATENDIDA → CERRADA)
+      parameters:
+        - $ref: '#/components/parameters/SolicitudId'
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -302,9 +329,8 @@ components:
       enum:
         - REGISTRADA
         - CLASIFICADA
-        - PRIORIZADA
-        - ASIGNADA
-        - EN_GESTION
+        - EN_ATENCION
+        - ATENDIDA
         - CERRADA
 
     PrioridadSolicitud:
@@ -351,6 +377,13 @@ components:
           nullable: true
         descripcion:
           type: string
+        justificacionPrioridad:
+          type: string
+          description: Justificación de la prioridad asignada (RF-03)
+        observacionCierre:
+          type: string
+          nullable: true
+          description: Observación registrada al cerrar la solicitud (RF-08)
         fechaCreacion:
           type: string
           format: date-time
@@ -427,7 +460,7 @@ components:
 
     SolicitudCreate:
       type: object
-      required: [tipoSolicitud, descripcion, canalOrigen, solicitanteId]
+      required: [tipoSolicitud, descripcion, canalOrigen]
       properties:
         tipoSolicitud:
           $ref: '#/components/schemas/TipoSolicitud'
@@ -435,15 +468,18 @@ components:
           type: string
         canalOrigen:
           $ref: '#/components/schemas/CanalOrigen'
-        solicitanteId:
-          type: integer
 
     ClasificacionRequest:
       type: object
-      required: [tipoSolicitud]
+      required: [tipoSolicitud, prioridad, justificacionPrioridad]
       properties:
         tipoSolicitud:
           $ref: '#/components/schemas/TipoSolicitud'
+        prioridad:
+          $ref: '#/components/schemas/PrioridadSolicitud'
+        justificacionPrioridad:
+          type: string
+          description: Justificación obligatoria de la prioridad asignada (RF-03)
 
     AsignacionRequest:
       type: object
@@ -452,8 +488,18 @@ components:
         responsableId:
           type: integer
 
+    AtenderRequest:
+      type: object
+      required: [comentario]
+      properties:
+        comentario:
+          type: string
+          description: Observación de la atención realizada
+
     CierreRequest:
       type: object
+      required: [comentarioCierre]
       properties:
         comentarioCierre:
           type: string
+          description: Observación obligatoria para formalizar el cierre de la solicitud

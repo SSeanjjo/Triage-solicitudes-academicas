@@ -4,8 +4,8 @@ skinparam classAttributeIconSize 0
 enum EstadoSolicitud {
   REGISTRADA
   CLASIFICADA
+  EN_ATENCION
   ATENDIDA
-  EN_GESTION
   CERRADA
 }
 
@@ -36,6 +36,18 @@ enum PrioridadSolicitud {
   CRITICA
 }
 
+class Usuario {
+  - id: Long
+  - nombre: String
+  - correo: String
+  - password: String
+  - activo: boolean
+  - rol: Rol
+  --
+  + estaActivo(): boolean
+  + tieneRol(rol: Rol): boolean
+}
+
 class Solicitud {
   - id: Long
   - descripcion: String
@@ -43,9 +55,17 @@ class Solicitud {
   - fechaActualizacion: LocalDateTime
   - estado: EstadoSolicitud
   - prioridad: PrioridadSolicitud
+  - justificacionPrioridad: String
   - tipo: TipoSolicitud
   - canalOrigen: CanalOrigen
-
+  - observacionCierre: String
+  --
+  + clasificar(tipo: TipoSolicitud, prioridad: PrioridadSolicitud, justificacion: String): void
+  + asignarResponsable(responsable: Usuario): void
+  + marcarEnAtencion(): void
+  + marcarAtendida(comentario: String): void
+  + cerrar(observacionCierre: String): void
+  + puedeTransicionarA(nuevoEstado: EstadoSolicitud): boolean
 }
 
 class HistorialSolicitud {
@@ -55,30 +75,13 @@ class HistorialSolicitud {
   - observacion: String
   - estadoAnterior: EstadoSolicitud
   - estadoNuevo: EstadoSolicitud
-}
-
-class AsignacionResponsable {
-  - id: Long
-  - fechaAsignacion: LocalDateTime
-}
-
-class Usuario {
-  - id: Long
-  - nombre: String
-  - correo: String
-  - password: String
-  - activo: boolean
-  - rol: Rol
+  --
+  + registrarEvento(accion: String, usuario: Usuario): void
 }
 
 Solicitud "1" --> "1" Usuario : solicitante
 Solicitud "1" --> "0..1" Usuario : responsable
-
 Solicitud "1" *-- "1..*" HistorialSolicitud
-Solicitud "1" *-- "0..*" AsignacionResponsable
 HistorialSolicitud "*" --> "1" Usuario : usuarioAccion
-
-
-AsignacionResponsable "*" --> "1" Usuario : responsable
 
 @enduml

@@ -5,9 +5,29 @@ title Estados de la Solicitud Académica
 
 REGISTRADA --> CLASIFICADA : clasificar()
 CLASIFICADA --> EN_ATENCION : asignarResponsable()
-EN_ATENCION --> ATENDIDA : resolver()
+EN_ATENCION --> ATENDIDA : marcarAtendida()
 ATENDIDA --> CERRADA : cerrar()
 
 CERRADA --> [*]
+
+note right of REGISTRADA
+  El solicitanteId se extrae
+  automáticamente del JWT (RF-13)
+end note
+
+note right of CLASIFICADA
+  Requiere tipo, prioridad
+  y justificacionPrioridad (RF-03)
+end note
+
+note right of CERRADA
+  Una solicitud cerrada
+  no puede ser modificada (RF-08)
+end note
+
+note bottom of EN_ATENCION
+  puedeTransicionarA() valida
+  que no se salten estados
+end note
 
 @enduml
