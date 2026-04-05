@@ -1,3 +1,5 @@
 apis:
   docs/API/APIs.yaml:
     alias: "api-sistema-de-triage-acad-mico"
+  docs/API/tramites.yaml:
+    alias: "api-sistema-de-triage-acad-mico1"
