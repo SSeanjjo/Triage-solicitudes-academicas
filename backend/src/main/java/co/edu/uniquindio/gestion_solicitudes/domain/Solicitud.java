@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Table(name = "solicitudes")
 public class Solicitud {
 
     @Id
@@ -34,12 +35,14 @@ public class Solicitud {
     private String observacionCierre;
 
     @ManyToOne
+    @JoinColumn(name = "solicitante_id")
     private Usuario solicitante;
 
     @ManyToOne
+    @JoinColumn(name = "responsable_id")
     private Usuario responsable;
 
-    @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<HistorialSolicitud> historial = new ArrayList<>();
 
     public Solicitud() {}
@@ -71,7 +74,7 @@ public class Solicitud {
         this.fechaActualizacion = LocalDateTime.now();
     }
 
-    public void marcarAtendida(String comentario) {
+    public void marcarAtendida() {
         this.estado = EstadoSolicitud.ATENDIDA;
         this.fechaActualizacion = LocalDateTime.now();
     }

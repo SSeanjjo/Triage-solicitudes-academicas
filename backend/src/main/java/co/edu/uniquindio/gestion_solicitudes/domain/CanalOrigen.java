@@ -1,6 +1,6 @@
 package co.edu.uniquindio.gestion_solicitudes.domain;
 
-public enum CanalOrigen {
+public enum  CanalOrigen {
     CORREO,
     PRESENCIAL,
     WEB,

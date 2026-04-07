@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
 @Entity
+@Table(name = "historial_solicitudes")
 public class HistorialSolicitud {
 
     @Id
@@ -21,10 +23,13 @@ public class HistorialSolicitud {
     @Enumerated(EnumType.STRING)
     private EstadoSolicitud estadoNuevo;
 
+
     @ManyToOne
+    @JoinColumn(name = "solicitud_id")
     private Solicitud solicitud;
 
     @ManyToOne
+    @JoinColumn(name = "usuario_accion_id")
     private Usuario usuarioAccion;
 
     public HistorialSolicitud() {}
@@ -39,13 +44,14 @@ public class HistorialSolicitud {
         this.fecha = LocalDateTime.now();
     }
 
-    public void registrarEvento(String accion, Usuario usuario) {
+    public void registrarEvento(String accion, Usuario usuario, EstadoSolicitud estadoNuevo) {
         this.accion = accion;
         this.usuarioAccion = usuario;
         this.fecha = LocalDateTime.now();
         if (solicitud != null) {
             this.estadoAnterior = solicitud.getEstado();
         }
+        this.estadoNuevo = estadoNuevo;
     }
 
     // Getters and Setters
