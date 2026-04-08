@@ -336,26 +336,29 @@ components:
     PrioridadSolicitud:
       type: string
       enum:
-        - BAJA
-        - MEDIA
         - ALTA
-        - CRITICA
+        - MEDIA
+        - BAJA
+
+
+
 
     TipoSolicitud:
       type: string
       enum:
-        - HOMOLOGACION
-        - CUPO
-        - CANCELACION
-        - OTRO
+      - REGISTRO_ASIGNATURA,
+      - HOMOLOGACION,
+      - CANCELACION,
+      - CUPO,
+      - CONSULTA_ACADEMICA
 
     CanalOrigen:
       type: string
       enum:
+        - CSU
         - CORREO
-        - PRESENCIAL
-        - WEB
-        - SISTEMA_ANTIGUO
+        - SAC
+        - TELEFONICO
 
     Solicitud:
       type: object

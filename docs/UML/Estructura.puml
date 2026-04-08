@@ -16,24 +16,24 @@ enum Rol {
 }
 
 enum TipoSolicitud {
-  HOMOLOGACION
-  CUPO
-  CANCELACION
-  OTRO
+   REGISTRO_ASIGNATURA,
+   HOMOLOGACION,
+   CANCELACION,
+   CUPO,
+   CONSULTA_ACADEMICA
 }
 
 enum CanalOrigen {
-  CORREO
-  PRESENCIAL
-  WEB
-  SISTEMA_ANTIGUO
+     CSU,
+     CORREO,
+     SAC,
+     TELEFONICO
 }
 
 enum PrioridadSolicitud {
-  BAJA
-  MEDIA
-  ALTA
-  CRITICA
+      ALTA,
+      MEDIA,
+      BAJA
 }
 
 class Usuario {
