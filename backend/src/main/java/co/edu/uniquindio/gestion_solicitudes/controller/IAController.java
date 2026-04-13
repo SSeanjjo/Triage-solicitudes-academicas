@@ -1,7 +1,5 @@
 package co.edu.uniquindio.gestion_solicitudes.controller;
 
-
-
 import co.edu.uniquindio.gestion_solicitudes.dto.request.ResumenIARequest;
 import co.edu.uniquindio.gestion_solicitudes.dto.response.ResumenIAResponse;
 import co.edu.uniquindio.gestion_solicitudes.dto.request.SugerenciaIARequest;
@@ -10,6 +8,7 @@ import co.edu.uniquindio.gestion_solicitudes.service.IAService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +19,7 @@ public class IAController {
     private final IAService iaService;
 
     @PostMapping("/sugerencias/clasificacion")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE', 'ESTUDIANTE')")
     public ResponseEntity<SugerenciaIAResponse> sugerirClasificacion(
             @Valid @RequestBody SugerenciaIARequest request) {
         try {
@@ -30,6 +30,7 @@ public class IAController {
     }
 
     @PostMapping("/resumen")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<ResumenIAResponse> generarResumen(
             @Valid @RequestBody ResumenIARequest request) {
         try {

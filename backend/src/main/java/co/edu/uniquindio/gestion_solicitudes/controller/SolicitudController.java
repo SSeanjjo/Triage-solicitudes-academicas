@@ -10,6 +10,7 @@ import co.edu.uniquindio.gestion_solicitudes.service.SolicitudService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class SolicitudController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ESTUDIANTE')")
     public ResponseEntity<SolicitudResponse> crear(
             @Valid @RequestBody SolicitudCreateRequest request,
             @RequestParam Long solicitanteId) {
@@ -33,6 +35,7 @@ public class SolicitudController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE', 'ESTUDIANTE')")
     public ResponseEntity<List<SolicitudResponse>> listar(
             @RequestParam(required = false) EstadoSolicitud estado,
             @RequestParam(required = false) TipoSolicitud tipo,
@@ -42,11 +45,13 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE', 'ESTUDIANTE')")
     public ResponseEntity<SolicitudResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(solicitudService.obtenerPorId(id));
     }
 
     @PatchMapping("/{id}/clasificar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> clasificar(
             @PathVariable Long id,
             @Valid @RequestBody ClasificacionRequest request,
@@ -55,6 +60,7 @@ public class SolicitudController {
     }
 
     @PatchMapping("/{id}/asignar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> asignar(
             @PathVariable Long id,
             @Valid @RequestBody AsignacionRequest request,
@@ -63,6 +69,7 @@ public class SolicitudController {
     }
 
     @PatchMapping("/{id}/atender")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> atender(
             @PathVariable Long id,
             @Valid @RequestBody AtenderRequest request,
@@ -71,6 +78,7 @@ public class SolicitudController {
     }
 
     @PatchMapping("/{id}/cerrar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> cerrar(
             @PathVariable Long id,
             @Valid @RequestBody CierreRequest request,
@@ -79,6 +87,7 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}/historial")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE', 'ESTUDIANTE')")
     public ResponseEntity<List<HistorialEventoResponse>> obtenerHistorial(@PathVariable Long id) {
         return ResponseEntity.ok(solicitudService.obtenerHistorial(id));
     }

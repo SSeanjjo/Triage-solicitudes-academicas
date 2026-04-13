@@ -6,6 +6,7 @@ import co.edu.uniquindio.gestion_solicitudes.dto.response.UsuarioResponse;
 import co.edu.uniquindio.gestion_solicitudes.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<List<UsuarioResponse>> listar(
             @RequestParam(required = false) Boolean activo,
             @RequestParam(required = false) Rol rol) {
@@ -28,11 +30,13 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<UsuarioResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<UsuarioResponse> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody UsuarioUpdateRequest request) {

@@ -346,10 +346,10 @@ components:
     TipoSolicitud:
       type: string
       enum:
-      - REGISTRO_ASIGNATURA,
-      - HOMOLOGACION,
-      - CANCELACION,
-      - CUPO,
+      - REGISTRO_ASIGNATURA
+      - HOMOLOGACION
+      - CANCELACION
+      - CUPO
       - CONSULTA_ACADEMICA
 
     CanalOrigen:
