@@ -1,8 +1,8 @@
 package co.edu.uniquindio.gestion_solicitudes.service;
 
 
-import co.edu.uniquindio.gestion_solicitudes.dto.UsuarioUpdateRequest;
-import co.edu.uniquindio.gestion_solicitudes.dto.UsuarioResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.request.UsuarioUpdateRequest;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.UsuarioResponse;
 import co.edu.uniquindio.gestion_solicitudes.domain.Rol;
 import java.util.List;
 

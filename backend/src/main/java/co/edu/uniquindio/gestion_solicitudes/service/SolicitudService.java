@@ -1,12 +1,13 @@
 package co.edu.uniquindio.gestion_solicitudes.service;
 
 
-import co.edu.uniquindio.gestion_solicitudes.dto.*;
-import co.edu.uniquindio.gestion_solicitudes.dto.HistorialEventoResponse;
-import co.edu.uniquindio.gestion_solicitudes.dto.SolicitudResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.request.*;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.HistorialEventoResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.SolicitudResponse;
 import co.edu.uniquindio.gestion_solicitudes.domain.EstadoSolicitud;
 import co.edu.uniquindio.gestion_solicitudes.domain.TipoSolicitud;
 import co.edu.uniquindio.gestion_solicitudes.domain.PrioridadSolicitud;
+
 import java.util.List;
 
 public interface SolicitudService {

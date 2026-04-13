@@ -1,9 +1,10 @@
 package co.edu.uniquindio.gestion_solicitudes.controller;
 
 import co.edu.uniquindio.gestion_solicitudes.domain.Rol;
-import co.edu.uniquindio.gestion_solicitudes.dto.UsuarioUpdateRequest;
-import co.edu.uniquindio.gestion_solicitudes.dto.UsuarioResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.request.UsuarioUpdateRequest;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.UsuarioResponse;
 import co.edu.uniquindio.gestion_solicitudes.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +35,7 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponse> actualizar(
             @PathVariable Long id,
-            @RequestBody UsuarioUpdateRequest request) {
+            @Valid @RequestBody UsuarioUpdateRequest request) {
         return ResponseEntity.ok(usuarioService.actualizar(id, request));
     }
 }

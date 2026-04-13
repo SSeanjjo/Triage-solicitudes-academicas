@@ -1,11 +1,13 @@
-package co.edu.uniquindio.gestion_solicitudes.service.Implementar;
+package co.edu.uniquindio.gestion_solicitudes.service.implementar;
 
 
 
 import co.edu.uniquindio.gestion_solicitudes.domain.*;
-import co.edu.uniquindio.gestion_solicitudes.dto.*;
-import co.edu.uniquindio.gestion_solicitudes.dto.HistorialEventoResponse;
-import co.edu.uniquindio.gestion_solicitudes.dto.SolicitudResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.request.*;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.HistorialEventoResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.SolicitudResponse;
+import co.edu.uniquindio.gestion_solicitudes.exception.BadRequestException;
+import co.edu.uniquindio.gestion_solicitudes.exception.ResourceNotFoundException;
 import co.edu.uniquindio.gestion_solicitudes.repository.HistorialSolicitudRepository;
 import co.edu.uniquindio.gestion_solicitudes.repository.SolicitudRepository;
 import co.edu.uniquindio.gestion_solicitudes.repository.UsuarioRepository;
@@ -33,7 +35,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public SolicitudResponse crear(SolicitudCreateRequest request, Long solicitanteId) {
         Usuario solicitante = usuarioRepository.findById(solicitanteId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         Solicitud solicitud = new Solicitud(
                 request.getDescripcion(),
@@ -52,7 +54,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public SolicitudResponse obtenerPorId(Long id) {
         Solicitud solicitud = solicitudRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada"));
         return mapearResponse(solicitud);
     }
 
@@ -76,7 +78,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         Usuario usuario = obtenerUsuario(usuarioId);
 
         if (!solicitud.puedeTransicionarA(EstadoSolicitud.CLASIFICADA)) {
-            throw new RuntimeException("La solicitud no puede clasificarse en su estado actual");
+            throw new BadRequestException("La solicitud no puede clasificarse en su estado actual");
         }
 
         EstadoSolicitud estadoAnterior = solicitud.getEstado();
@@ -95,14 +97,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud solicitud = obtenerSolicitud(id);
         Usuario usuario = obtenerUsuario(usuarioId);
         Usuario responsable = usuarioRepository.findById(request.getResponsableId())
-                .orElseThrow(() -> new RuntimeException("Responsable no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Responsable no encontrado"));
 
         if (!responsable.estaActivo()) {
-            throw new RuntimeException("El responsable no está activo");
+            throw new BadRequestException("El responsable no está activo");
         }
 
         if (!solicitud.puedeTransicionarA(EstadoSolicitud.EN_ATENCION)) {
-            throw new RuntimeException("La solicitud no puede asignarse en su estado actual");
+            throw new BadRequestException("La solicitud no puede asignarse en su estado actual");
         }
 
         EstadoSolicitud estadoAnterior = solicitud.getEstado();
@@ -122,7 +124,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         Usuario usuario = obtenerUsuario(usuarioId);
 
         if (!solicitud.puedeTransicionarA(EstadoSolicitud.ATENDIDA)) {
-            throw new RuntimeException("La solicitud no puede atenderse en su estado actual");
+            throw new BadRequestException("La solicitud no puede atenderse en su estado actual");
         }
 
         EstadoSolicitud estadoAnterior = solicitud.getEstado();
@@ -141,7 +143,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         Usuario usuario = obtenerUsuario(usuarioId);
 
         if (!solicitud.puedeTransicionarA(EstadoSolicitud.CERRADA)) {
-            throw new RuntimeException("La solicitud no puede cerrarse en su estado actual");
+            throw new BadRequestException("La solicitud no puede cerrarse en su estado actual");
         }
 
         EstadoSolicitud estadoAnterior = solicitud.getEstado();
@@ -173,12 +175,12 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private Solicitud obtenerSolicitud(Long id) {
         return solicitudRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada"));
     }
 
     private Usuario obtenerUsuario(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
     private SolicitudResponse mapearResponse(Solicitud solicitud) {

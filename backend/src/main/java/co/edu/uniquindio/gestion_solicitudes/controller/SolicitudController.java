@@ -1,14 +1,13 @@
 package co.edu.uniquindio.gestion_solicitudes.controller;
 
-
-
 import co.edu.uniquindio.gestion_solicitudes.domain.EstadoSolicitud;
 import co.edu.uniquindio.gestion_solicitudes.domain.PrioridadSolicitud;
 import co.edu.uniquindio.gestion_solicitudes.domain.TipoSolicitud;
-import co.edu.uniquindio.gestion_solicitudes.dto.*;
-import co.edu.uniquindio.gestion_solicitudes.dto.HistorialEventoResponse;
-import co.edu.uniquindio.gestion_solicitudes.dto.SolicitudResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.request.*;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.HistorialEventoResponse;
+import co.edu.uniquindio.gestion_solicitudes.dto.response.SolicitudResponse;
 import co.edu.uniquindio.gestion_solicitudes.service.SolicitudService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +26,7 @@ public class SolicitudController {
 
     @PostMapping
     public ResponseEntity<SolicitudResponse> crear(
-            @RequestBody SolicitudCreateRequest request,
+            @Valid @RequestBody SolicitudCreateRequest request,
             @RequestParam Long solicitanteId) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(solicitudService.crear(request, solicitanteId));
@@ -50,7 +49,7 @@ public class SolicitudController {
     @PatchMapping("/{id}/clasificar")
     public ResponseEntity<SolicitudResponse> clasificar(
             @PathVariable Long id,
-            @RequestBody ClasificacionRequest request,
+            @Valid @RequestBody ClasificacionRequest request,
             @RequestParam Long usuarioId) {
         return ResponseEntity.ok(solicitudService.clasificar(id, request, usuarioId));
     }
@@ -58,7 +57,7 @@ public class SolicitudController {
     @PatchMapping("/{id}/asignar")
     public ResponseEntity<SolicitudResponse> asignar(
             @PathVariable Long id,
-            @RequestBody AsignacionRequest request,
+            @Valid @RequestBody AsignacionRequest request,
             @RequestParam Long usuarioId) {
         return ResponseEntity.ok(solicitudService.asignar(id, request, usuarioId));
     }
@@ -66,7 +65,7 @@ public class SolicitudController {
     @PatchMapping("/{id}/atender")
     public ResponseEntity<SolicitudResponse> atender(
             @PathVariable Long id,
-            @RequestBody AtenderRequest request,
+            @Valid @RequestBody AtenderRequest request,
             @RequestParam Long usuarioId) {
         return ResponseEntity.ok(solicitudService.atender(id, request, usuarioId));
     }
@@ -74,7 +73,7 @@ public class SolicitudController {
     @PatchMapping("/{id}/cerrar")
     public ResponseEntity<SolicitudResponse> cerrar(
             @PathVariable Long id,
-            @RequestBody CierreRequest request,
+            @Valid @RequestBody CierreRequest request,
             @RequestParam Long usuarioId) {
         return ResponseEntity.ok(solicitudService.cerrar(id, request, usuarioId));
     }
