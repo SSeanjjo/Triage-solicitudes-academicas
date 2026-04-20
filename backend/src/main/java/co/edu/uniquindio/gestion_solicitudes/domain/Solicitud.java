@@ -6,6 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Entidad que representa una solicitud académica en el sistema de triage.
+ * <p>
+ * Una solicitud tiene un ciclo de vida definido con los siguientes estados:
+ * REGISTRADA → CLASIFICADA → EN_ATENCION → ATENDIDA → CERRADA.
+ * Cada transición queda registrada en el historial de eventos.
+ * </p>
+ *
+ * @author Manu-Z, SseanJjo
+ * @version 1.0
+ */
+
 @Entity
 @Table(name = "solicitudes")
 public class Solicitud {
@@ -56,6 +68,15 @@ public class Solicitud {
         this.estado = EstadoSolicitud.REGISTRADA;
     }
 
+    /**
+     * Clasifica la solicitud asignándole tipo, prioridad y justificación.
+     * Transiciona el estado a CLASIFICADA.
+     *
+     * @param tipo          tipo académico de la solicitud
+     * @param prioridad     nivel de prioridad asignado
+     * @param justificacion texto que explica el criterio de clasificación
+     */
+
     public void clasificar(TipoSolicitud tipo, PrioridadSolicitud prioridad, String justificacion) {
         this.tipo = tipo;
         this.prioridad = prioridad;
@@ -84,6 +105,14 @@ public class Solicitud {
         this.estado = EstadoSolicitud.CERRADA;
         this.fechaActualizacion = LocalDateTime.now();
     }
+
+    /**
+     * Verifica si la solicitud puede transicionar al estado indicado
+     * según las reglas del ciclo de vida definido.
+     *
+     * @param nuevoEstado estado al que se desea transicionar
+     * @return {@code true} si la transición es válida, {@code false} en caso contrario
+     */
 
     public boolean puedeTransicionarA(EstadoSolicitud nuevoEstado) {
         switch (this.estado) {

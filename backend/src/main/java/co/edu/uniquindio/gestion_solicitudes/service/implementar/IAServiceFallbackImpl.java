@@ -11,11 +11,36 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+/**
+ * Implementación de respaldo del servicio de IA basada en reglas locales.
+ * <p>
+ * Garantiza el funcionamiento del sistema sin depender de servicios externos (RF-11).
+ * Utiliza mapas de palabras clave predefinidas para inferir el tipo y prioridad
+ * de una solicitud, y construye resúmenes concatenando los campos de la entidad.
+ * </p>
+ * <p>
+ * Es usada en dos escenarios:
+ * <ul>
+ *   <li>Cuando Gemini no está configurado ({@code ai.gemini.enabled=false})</li>
+ *   <li>Cuando Gemini falla en tiempo de ejecución (timeout, error HTTP, etc.)</li>
+ * </ul>
+ * </p>
+ *
+ * @author Manu-Z, SseanJjo
+ * @version 1.0
+ */
+
 @Slf4j
 @RequiredArgsConstructor
+
 public class IAServiceFallbackImpl implements IAService {
 
     private final SolicitudRepository solicitudRepository;
+
+    /**
+     * Mapa de palabras clave para inferir el tipo de solicitud.
+     * Clave: palabra clave en minúsculas. Valor: tipo de solicitud correspondiente.
+     */
 
     private static final Map<String, TipoSolicitud> KEYWORDS_TIPO = Map.of(
             "homologacion", TipoSolicitud.HOMOLOGACION,
@@ -29,6 +54,11 @@ public class IAServiceFallbackImpl implements IAService {
             "informacion", TipoSolicitud.CONSULTA_ACADEMICA
     );
 
+    /**
+     * Mapa de palabras clave para inferir la prioridad de la solicitud.
+     * Clave: palabra clave en minúsculas. Valor: prioridad correspondiente.
+     */
+
     private static final Map<String, PrioridadSolicitud> KEYWORDS_PRIORIDAD = Map.of(
             "urgente", PrioridadSolicitud.ALTA,
             "critico", PrioridadSolicitud.ALTA,
@@ -37,6 +67,17 @@ public class IAServiceFallbackImpl implements IAService {
             "plazo", PrioridadSolicitud.MEDIA,
             "pronto", PrioridadSolicitud.MEDIA
     );
+
+    /**
+     * Infiere el tipo y prioridad de una solicitud mediante palabras clave (RF-10 fallback).
+     * <p>
+     * Recorre los mapas de palabras clave buscando coincidencias en el texto.
+     * Si no encuentra ninguna, sugiere {@code CONSULTA_ACADEMICA} con confianza baja (0.3).
+     * </p>
+     *
+     * @param descripcion texto de la solicitud en cualquier formato
+     * @return sugerencia con tipo, prioridad, confianza y explicación del criterio
+     */
 
     @Override
     public SugerenciaIAResponse sugerirClasificacion(String descripcion) {
@@ -81,6 +122,14 @@ public class IAServiceFallbackImpl implements IAService {
                 .explicacion("[Fallback] " + explicacion.toString().trim())
                 .build();
     }
+
+    /**
+     * Genera un resumen básico concatenando los campos principales de la solicitud (RF-09 fallback).
+     *
+     * @param solicitudId id de la solicitud
+     * @return resumen con los datos básicos de la solicitud
+     * @throws ResourceNotFoundException si la solicitud no existe
+     */
 
     @Override
     public ResumenIAResponse generarResumen(Long solicitudId) {

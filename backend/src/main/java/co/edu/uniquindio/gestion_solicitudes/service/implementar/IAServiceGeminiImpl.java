@@ -16,10 +16,27 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Implementación del servicio de IA usando la API de Google Gemini.
+ * <p>
+ * Realiza llamadas HTTP a la API de Gemini para generar resúmenes (RF-09)
+ * y sugerencias de clasificación (RF-10). Si la API no está disponible o
+ * responde con error, delega automáticamente al {@link IAServiceFallbackImpl}
+ * para garantizar el funcionamiento sin IA (RF-11).
+ * </p>
+ * <p>
+ * Esta clase es instanciada condicionalmente desde {@link IAServiceConfig}
+ * solo cuando la propiedad {@code ai.gemini.enabled=true} y la API key
+ * están configuradas correctamente.
+ * </p>
+ *
+ * @author Manu-Z, SseanJjo
+ * @version 1.0
+ * @see IAServiceFallbackImpl
+ * @see IAServiceConfig
+ */
 @Slf4j
 public class IAServiceGeminiImpl implements IAService {
-
     private final SolicitudRepository solicitudRepository;
     private final IAServiceFallbackImpl fallback;
     private final String apiKey;
@@ -27,6 +44,16 @@ public class IAServiceGeminiImpl implements IAService {
     private final int timeoutMs;
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    /**
+     * Construye una instancia del servicio Gemini con todas sus dependencias.
+     *
+     * @param solicitudRepository repositorio para consultar datos de solicitudes
+     * @param fallback            implementación de respaldo usada cuando Gemini falla
+     * @param apiKey              clave de autenticación para la API de Gemini
+     * @param apiUrl              URL del endpoint de Gemini
+     * @param timeoutMs           tiempo máximo de espera en milisegundos para la respuesta
+     */
 
     public IAServiceGeminiImpl(SolicitudRepository solicitudRepository,
                                IAServiceFallbackImpl fallback,
@@ -40,7 +67,16 @@ public class IAServiceGeminiImpl implements IAService {
         this.timeoutMs = timeoutMs;
     }
 
-    // ── RF-10: Sugerencia de clasificación ──────────────────────────────────
+    /**
+     * Sugiere clasificación enviando la descripción a Gemini como prompt.
+     * <p>
+     * Si Gemini responde con error o supera el timeout, activa el fallback
+     * automáticamente sin lanzar excepción al cliente.
+     * </p>
+     *
+     * @param descripcion texto de la solicitud a clasificar
+     * @return sugerencia generada por Gemini o por el fallback si falla
+     */
 
     @Override
     public SugerenciaIAResponse sugerirClasificacion(String descripcion) {
@@ -68,7 +104,17 @@ public class IAServiceGeminiImpl implements IAService {
         }
     }
 
-    // ── RF-09: Generación de resumen ────────────────────────────────────────
+    /**
+     * Genera un resumen de la solicitud enviando su información completa a Gemini.
+     * <p>
+     * Incluye descripción, estado, tipo, prioridad, responsable, canal de origen
+     * e historial de eventos como contexto para el modelo.
+     * </p>
+     *
+     * @param solicitudId id de la solicitud a resumir
+     * @return resumen generado por Gemini o por el fallback si falla
+     * @throws ResourceNotFoundException si la solicitud no existe
+     */
 
     @Override
     public ResumenIAResponse generarResumen(Long solicitudId) {
@@ -122,7 +168,13 @@ public class IAServiceGeminiImpl implements IAService {
         }
     }
 
-    // ── Llamada HTTP a Gemini ───────────────────────────────────────────────
+    /**
+     * Realiza la llamada HTTP POST a la API de Gemini.
+     *
+     * @param prompt texto del prompt a enviar al modelo
+     * @return texto de respuesta extraído de la respuesta JSON de Gemini
+     * @throws Exception si el status HTTP no es 200 o si supera el timeout
+     */
 
     private String llamarGemini(String prompt) throws Exception {
         Map<String, Object> body = Map.of(

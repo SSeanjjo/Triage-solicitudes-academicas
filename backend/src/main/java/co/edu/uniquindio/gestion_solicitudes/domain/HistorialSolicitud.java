@@ -4,7 +4,17 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-
+/**
+ * Entidad que registra cada evento ocurrido en el ciclo de vida de una solicitud.
+ * <p>
+ * Cada vez que una solicitud cambia de estado, se guarda un registro en esta
+ * entidad con la fecha, el usuario que realizó la acción, el estado anterior
+ * y el nuevo estado. Permite trazabilidad completa de la solicitud.
+ * </p>
+ *
+ * @author Manu-Z
+ * @version 1.0
+ */
 @Entity
 @Table(name = "historial_solicitudes")
 public class HistorialSolicitud {
@@ -12,28 +22,59 @@ public class HistorialSolicitud {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    /**
+     * Fecha y hora exacta en que ocurrió el evento.
+     */
     private LocalDateTime fecha;
+    /**
+     * Descripción de la acción realizada. Ejemplos: "Solicitud creada",
+     * "Responsable asignado", "Solicitud cerrada".
+     */
     private String accion;
+    /**
+     * Comentario u observación adicional registrada por el usuario
+     * al momento de ejecutar la acción. Puede ser nulo.
+     */
     private String observacion;
 
+    /**
+     * Estado en que se encontraba la solicitud antes del evento.
+     * Es nulo cuando el evento es la creación inicial.
+     */
     @Enumerated(EnumType.STRING)
     private EstadoSolicitud estadoAnterior;
-
+    /**
+     * Estado al que transicionó la solicitud tras el evento.
+     */
     @Enumerated(EnumType.STRING)
     private EstadoSolicitud estadoNuevo;
 
-
+    /**
+     * Solicitud a la que pertenece este evento del historial.
+     */
     @ManyToOne
     @JoinColumn(name = "solicitud_id")
     private Solicitud solicitud;
 
+    /**
+     * Usuario que ejecutó la acción que generó este evento.
+     */
     @ManyToOne
     @JoinColumn(name = "usuario_accion_id")
     private Usuario usuarioAccion;
 
     public HistorialSolicitud() {}
 
+    /**
+     * Construye un evento de historial con todos sus datos.
+     *
+     * @param solicitud      solicitud asociada al evento
+     * @param usuarioAccion  usuario que ejecutó la acción
+     * @param accion         descripción de la acción realizada
+     * @param observacion    comentario adicional, puede ser nulo
+     * @param estadoAnterior estado previo de la solicitud
+     * @param estadoNuevo    nuevo estado tras la acción
+     */
     public HistorialSolicitud(Solicitud solicitud, Usuario usuarioAccion, String accion, String observacion, EstadoSolicitud estadoAnterior, EstadoSolicitud estadoNuevo) {
         this.solicitud = solicitud;
         this.usuarioAccion = usuarioAccion;
@@ -44,15 +85,6 @@ public class HistorialSolicitud {
         this.fecha = LocalDateTime.now();
     }
 
-    public void registrarEvento(String accion, Usuario usuario, EstadoSolicitud estadoNuevo) {
-        this.accion = accion;
-        this.usuarioAccion = usuario;
-        this.fecha = LocalDateTime.now();
-        if (solicitud != null) {
-            this.estadoAnterior = solicitud.getEstado();
-        }
-        this.estadoNuevo = estadoNuevo;
-    }
 
     // Getters and Setters
     public Long getId() {
