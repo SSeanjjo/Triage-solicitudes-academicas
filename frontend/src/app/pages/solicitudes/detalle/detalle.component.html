@@ -1,0 +1,333 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner></mat-spinner>
+      <p>Cargando solicitud...</p>
+    </div>
+  } @else if (solicitud()) {
+    <div class="page-header">
+      <button mat-icon-button routerLink="/solicitudes">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Solicitud #{{ solicitud()!.id }}</h1>
+        <span class="chip" [class]="getEstadoClass(solicitud()!.estado)">
+          {{ solicitud()!.estado.replace('_',' ') }}
+        </span>
+        @if (solicitud()!.prioridad) {
+          <span class="chip" [class]="getPrioridadClass(solicitud()!.prioridad)">
+            {{ solicitud()!.prioridad }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="main-col">
+
+        <!-- Info card -->
+        <mat-card class="info-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>assignment</mat-icon>
+            <mat-card-title>{{ solicitud()!.titulo }}</mat-card-title>
+            <mat-card-subtitle>{{ formatTipo(solicitud()!.tipoSolicitud) }} · {{ formatCanal(solicitud()!.canalOrigen) }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="description-block">
+              <p class="description-text">{{ solicitud()!.descripcion }}</p>
+            </div>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <div class="meta-grid">
+              <div class="meta-item">
+                <span class="meta-label">Solicitante</span>
+                <span class="meta-value">{{ solicitud()!.solicitanteNombre ?? '—' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Responsable</span>
+                <span class="meta-value">{{ solicitud()!.responsableNombre ?? 'Sin asignar' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Fecha de Creación</span>
+                <span class="meta-value">{{ solicitud()!.fechaCreacion ? (solicitud()!.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Última Actualización</span>
+                <span class="meta-value">{{ solicitud()!.fechaActualizacion ? (solicitud()!.fechaActualizacion | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Tipo</span>
+                <span class="meta-value">{{ formatTipo(solicitud()!.tipoSolicitud) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Canal</span>
+                <span class="meta-value">{{ formatCanal(solicitud()!.canalOrigen) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Actions card -->
+        @if (canClasificar() || canAsignar() || canAtender() || canCerrar()) {
+          <mat-card class="actions-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>build</mat-icon>
+              <mat-card-title>Acciones Disponibles</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+
+              @if (!showClasificarForm && !showAsignarForm) {
+                <div class="action-buttons">
+                  @if (canClasificar()) {
+                    <button mat-raised-button color="primary" (click)="openClasificarForm()" [disabled]="actionLoading()">
+                      <mat-icon>category</mat-icon> Clasificar Solicitud
+                    </button>
+                  }
+                  @if (canAsignar()) {
+                    <button mat-raised-button color="accent" (click)="openAsignarForm()" [disabled]="actionLoading()">
+                      <mat-icon>person_pin</mat-icon> Asignar Responsable
+                    </button>
+                  }
+                  @if (canAtender()) {
+                    <button mat-raised-button class="btn-atender" (click)="openAtenderForm()" [disabled]="actionLoading()">
+                      <mat-icon>engineering</mat-icon> Marcar como Atendida
+                    </button>
+                  }
+                  @if (canCerrar()) {
+                    <button mat-raised-button color="warn" (click)="openCerrarForm()" [disabled]="actionLoading()">
+                      <mat-icon>lock</mat-icon> Cerrar Solicitud
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Clasificar inline form -->
+              @if (showClasificarForm) {
+                <form [formGroup]="clasificarForm" (ngSubmit)="onClasificar()" class="inline-form">
+                  <h3 class="form-section-title">
+                    <mat-icon>category</mat-icon> Clasificar Solicitud
+                  </h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="flex-field">
+                      <mat-label>Tipo de Solicitud</mat-label>
+                      <mat-select formControlName="tipoSolicitud">
+                        @for (t of tipos; track t) {
+                          <mat-option [value]="t">{{ t.replace(/_/g,' ') }}</mat-option>
+                        }
+                      </mat-select>
+                      @if (clasificarForm.get('tipoSolicitud')?.errors?.['required'] && clasificarForm.get('tipoSolicitud')?.touched) {
+                        <mat-error>Selecciona el tipo</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="flex-field">
+                      <mat-label>Prioridad</mat-label>
+                      <mat-select formControlName="prioridad">
+                        @for (p of prioridades; track p) {
+                          <mat-option [value]="p">{{ p }}</mat-option>
+                        }
+                      </mat-select>
+                      @if (clasificarForm.get('prioridad')?.errors?.['required'] && clasificarForm.get('prioridad')?.touched) {
+                        <mat-error>Selecciona la prioridad</mat-error>
+                      }
+                    </mat-form-field>
+                  </div>
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Justificación de la prioridad</mat-label>
+                    <textarea matInput formControlName="justificacionPrioridad" rows="2"
+                      placeholder="Explica el criterio de clasificación (mín. 10 caracteres)"></textarea>
+                    @if (clasificarForm.get('justificacionPrioridad')?.errors && clasificarForm.get('justificacionPrioridad')?.touched) {
+                      <mat-error>La justificación es obligatoria (mín. 10 caracteres)</mat-error>
+                    }
+                  </mat-form-field>
+                  <div class="form-actions">
+                    <button mat-stroked-button type="button" (click)="cancelForms()">Cancelar</button>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="clasificarForm.invalid || actionLoading()">
+                      @if (actionLoading()) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
+                      Confirmar Clasificación
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Atender inline form -->
+              @if (showAtenderForm) {
+                <form [formGroup]="atenderForm" (ngSubmit)="onAtender()" class="inline-form">
+                  <h3 class="form-section-title">
+                    <mat-icon>engineering</mat-icon> Marcar como Atendida
+                  </h3>
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Comentario de atención</mat-label>
+                    <textarea matInput formControlName="comentario" rows="3"
+                      placeholder="Describe la acción realizada (mín. 10 caracteres)"></textarea>
+                    @if (atenderForm.get('comentario')?.errors && atenderForm.get('comentario')?.touched) {
+                      <mat-error>El comentario es obligatorio (mín. 10 caracteres)</mat-error>
+                    }
+                  </mat-form-field>
+                  <div class="form-actions">
+                    <button mat-stroked-button type="button" (click)="cancelForms()">Cancelar</button>
+                    <button mat-raised-button class="btn-atender" type="submit" [disabled]="atenderForm.invalid || actionLoading()">
+                      @if (actionLoading()) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
+                      Confirmar Atención
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Cerrar inline form -->
+              @if (showCerrarForm) {
+                <form [formGroup]="cerrarForm" (ngSubmit)="onCerrar()" class="inline-form">
+                  <h3 class="form-section-title">
+                    <mat-icon>lock</mat-icon> Cerrar Solicitud
+                  </h3>
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Observación de cierre</mat-label>
+                    <textarea matInput formControlName="comentarioCierre" rows="3"
+                      placeholder="Describe la resolución final (mín. 10 caracteres)"></textarea>
+                    @if (cerrarForm.get('comentarioCierre')?.errors && cerrarForm.get('comentarioCierre')?.touched) {
+                      <mat-error>La observación es obligatoria (mín. 10 caracteres)</mat-error>
+                    }
+                  </mat-form-field>
+                  <div class="form-actions">
+                    <button mat-stroked-button type="button" (click)="cancelForms()">Cancelar</button>
+                    <button mat-raised-button color="warn" type="submit" [disabled]="cerrarForm.invalid || actionLoading()">
+                      @if (actionLoading()) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
+                      Confirmar Cierre
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Asignar inline form -->
+              @if (showAsignarForm) {
+                <form [formGroup]="asignarForm" (ngSubmit)="onAsignar()" class="inline-form">
+                  <h3 class="form-section-title">
+                    <mat-icon>person_pin</mat-icon> Asignar Responsable
+                  </h3>
+                  @if (auth.hasRole(Rol.ADMINISTRADOR)) {
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Seleccionar Responsable</mat-label>
+                      <mat-select formControlName="responsableId">
+                        @for (r of responsables(); track r.id) {
+                          <mat-option [value]="r.id">{{ r.nombre }} ({{ r.correo }})</mat-option>
+                        }
+                      </mat-select>
+                      @if (asignarForm.get('responsableId')?.errors?.['required'] && asignarForm.get('responsableId')?.touched) {
+                        <mat-error>Selecciona un responsable</mat-error>
+                      }
+                    </mat-form-field>
+                  } @else {
+                    <p class="assign-self-note">
+                      <mat-icon>info</mat-icon>
+                      Te asignarás como responsable de esta solicitud.
+                    </p>
+                  }
+                  <div class="form-actions">
+                    <button mat-stroked-button type="button" (click)="cancelForms()">Cancelar</button>
+                    <button mat-raised-button color="accent" type="submit" [disabled]="asignarForm.invalid || actionLoading()">
+                      @if (actionLoading()) {
+                        <mat-spinner diameter="18" class="inline-spinner"></mat-spinner>
+                      }
+                      Confirmar Asignación
+                    </button>
+                  </div>
+                </form>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <!-- AI Resumen (RESPONSABLE / ADMIN) -->
+        @if (auth.hasRole(Rol.RESPONSABLE, Rol.ADMINISTRADOR)) {
+          <mat-card class="ai-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>auto_awesome</mat-icon>
+              <mat-card-title>Resumen con IA</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              @if (!aiResumen()) {
+                <button mat-stroked-button class="ai-btn" (click)="generarResumenIA()" [disabled]="aiLoading()">
+                  @if (aiLoading()) {
+                    <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> Generando...
+                  } @else {
+                    <mat-icon>psychology</mat-icon> Generar Resumen con IA
+                  }
+                </button>
+              } @else {
+                <div class="ai-result-block">
+                  <mat-icon class="ai-result-icon">psychology</mat-icon>
+                  <div>
+                    <strong>Resumen generado:</strong>
+                    <p>{{ aiResumen() }}</p>
+                    <button mat-button color="primary" (click)="aiResumen.set(null)">
+                      <mat-icon>refresh</mat-icon> Regenerar
+                    </button>
+                  </div>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+
+      </div>
+
+      <!-- Historial -->
+      <div class="side-col">
+        <mat-card class="historial-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>history</mat-icon>
+            <mat-card-title>Historial de Cambios</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (historialLoading()) {
+              <div class="loading-sm"><mat-spinner diameter="32"></mat-spinner></div>
+            } @else if (historial().length === 0) {
+              <p class="no-historial">Sin movimientos registrados aún.</p>
+            } @else {
+              <div class="historial-list">
+                @for (entry of historial(); track entry.id) {
+                  <div class="historial-item">
+                    <div class="historial-icon-col">
+                      <mat-icon class="historial-icon">radio_button_checked</mat-icon>
+                      <div class="historial-line"></div>
+                    </div>
+                    <div class="historial-content">
+                      <div class="historial-action">{{ entry.accion ?? 'Acción' }}</div>
+                      @if (entry.estadoAnterior && entry.estadoNuevo) {
+                        <div class="historial-states">
+                          <span class="chip chip-sm" [class]="getEstadoClass(entry.estadoAnterior)">{{ entry.estadoAnterior.replace('_',' ') }}</span>
+                          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                          <span class="chip chip-sm" [class]="getEstadoClass(entry.estadoNuevo)">{{ entry.estadoNuevo.replace('_',' ') }}</span>
+                        </div>
+                      }
+                      @if (entry.comentario) {
+                        <div class="historial-desc">{{ entry.comentario }}</div>
+                      }
+                      <div class="historial-meta">
+                        @if (entry.usuarioId) {
+                          <span><mat-icon class="meta-icon">person</mat-icon> #{{ entry.usuarioId }}</span>
+                        }
+                        @if (entry.fecha) {
+                          <span><mat-icon class="meta-icon">schedule</mat-icon> {{ entry.fecha | date:'dd/MM/yy HH:mm' }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  } @else {
+    <div class="not-found">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Solicitud no encontrada</h2>
+      <button mat-raised-button color="primary" routerLink="/solicitudes">Volver a Solicitudes</button>
+    </div>
+  }
+</div>

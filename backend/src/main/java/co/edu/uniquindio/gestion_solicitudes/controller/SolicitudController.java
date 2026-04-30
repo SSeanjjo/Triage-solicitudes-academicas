@@ -6,11 +6,14 @@ import co.edu.uniquindio.gestion_solicitudes.domain.TipoSolicitud;
 import co.edu.uniquindio.gestion_solicitudes.dto.request.*;
 import co.edu.uniquindio.gestion_solicitudes.dto.response.HistorialEventoResponse;
 import co.edu.uniquindio.gestion_solicitudes.dto.response.SolicitudResponse;
+import co.edu.uniquindio.gestion_solicitudes.exception.ResourceNotFoundException;
+import co.edu.uniquindio.gestion_solicitudes.repository.UsuarioRepository;
 import co.edu.uniquindio.gestion_solicitudes.service.SolicitudService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,9 +36,18 @@ import java.util.List;
 public class SolicitudController {
 
     private final SolicitudService solicitudService;
+    private final UsuarioRepository usuarioRepository;
 
-    public SolicitudController(SolicitudService solicitudService) {
+    public SolicitudController(SolicitudService solicitudService, UsuarioRepository usuarioRepository) {
         this.solicitudService = solicitudService;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    private Long obtenerIdUsuarioAutenticado() {
+        String correo = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado: " + correo))
+                .getId();
     }
 
     /**
@@ -50,10 +62,9 @@ public class SolicitudController {
     @PostMapping
     @PreAuthorize("hasRole('ESTUDIANTE')")
     public ResponseEntity<SolicitudResponse> crear(
-            @Valid @RequestBody SolicitudCreateRequest request,
-            @RequestParam Long solicitanteId) {
+            @Valid @RequestBody SolicitudCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(solicitudService.crear(request, solicitanteId));
+                .body(solicitudService.crear(request, obtenerIdUsuarioAutenticado()));
     }
 
     /**
@@ -104,9 +115,8 @@ public class SolicitudController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> clasificar(
             @PathVariable Long id,
-            @Valid @RequestBody ClasificacionRequest request,
-            @RequestParam Long usuarioId) {
-        return ResponseEntity.ok(solicitudService.clasificar(id, request, usuarioId));
+            @Valid @RequestBody ClasificacionRequest request) {
+        return ResponseEntity.ok(solicitudService.clasificar(id, request, obtenerIdUsuarioAutenticado()));
     }
 
     /**
@@ -123,9 +133,8 @@ public class SolicitudController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> asignar(
             @PathVariable Long id,
-            @Valid @RequestBody AsignacionRequest request,
-            @RequestParam Long usuarioId) {
-        return ResponseEntity.ok(solicitudService.asignar(id, request, usuarioId));
+            @Valid @RequestBody AsignacionRequest request) {
+        return ResponseEntity.ok(solicitudService.asignar(id, request, obtenerIdUsuarioAutenticado()));
     }
 
     /**
@@ -141,9 +150,8 @@ public class SolicitudController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> atender(
             @PathVariable Long id,
-            @Valid @RequestBody AtenderRequest request,
-            @RequestParam Long usuarioId) {
-        return ResponseEntity.ok(solicitudService.atender(id, request, usuarioId));
+            @Valid @RequestBody AtenderRequest request) {
+        return ResponseEntity.ok(solicitudService.atender(id, request, obtenerIdUsuarioAutenticado()));
     }
 
     /**
@@ -160,9 +168,8 @@ public class SolicitudController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RESPONSABLE')")
     public ResponseEntity<SolicitudResponse> cerrar(
             @PathVariable Long id,
-            @Valid @RequestBody CierreRequest request,
-            @RequestParam Long usuarioId) {
-        return ResponseEntity.ok(solicitudService.cerrar(id, request, usuarioId));
+            @Valid @RequestBody CierreRequest request) {
+        return ResponseEntity.ok(solicitudService.cerrar(id, request, obtenerIdUsuarioAutenticado()));
     }
 
     /**

@@ -1,0 +1,162 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="page-header">
+    <button mat-icon-button routerLink="/solicitudes" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="page-title">Nueva Solicitud</h1>
+      <p class="page-sub">Completa el formulario para registrar tu solicitud académica</p>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>assignment_add</mat-icon>
+        <mat-card-title>Datos de la Solicitud</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="solicitud-form">
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Título</mat-label>
+            <input matInput formControlName="titulo" placeholder="Describe brevemente tu solicitud" />
+            <mat-hint align="end">{{ form.get('titulo')?.value?.length ?? 0 }}/150</mat-hint>
+            @if (form.get('titulo')?.errors?.['required'] && form.get('titulo')?.touched) {
+              <mat-error>El título es requerido</mat-error>
+            } @else if (form.get('titulo')?.errors?.['minlength'] && form.get('titulo')?.touched) {
+              <mat-error>El título debe tener al menos 5 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Descripción detallada</mat-label>
+            <textarea
+              matInput
+              formControlName="descripcion"
+              rows="5"
+              placeholder="Describe en detalle tu solicitud, incluyendo todos los datos relevantes..."
+            ></textarea>
+            <mat-hint align="end">{{ form.get('descripcion')?.value?.length ?? 0 }}/1000</mat-hint>
+            @if (form.get('descripcion')?.errors?.['required'] && form.get('descripcion')?.touched) {
+              <mat-error>La descripción es requerida</mat-error>
+            } @else if (form.get('descripcion')?.errors?.['minlength'] && form.get('descripcion')?.touched) {
+              <mat-error>La descripción debe tener al menos 10 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="ai-section">
+            <button
+              mat-stroked-button
+              type="button"
+              class="ai-btn"
+              (click)="getSugerenciaIA()"
+              [disabled]="aiLoading()"
+            >
+              @if (aiLoading()) {
+                <mat-spinner diameter="18" class="inline-spinner"></mat-spinner>
+                Consultando IA...
+              } @else {
+                <mat-icon>auto_awesome</mat-icon>
+                Sugerencia de IA para Clasificación
+              }
+            </button>
+          </div>
+
+          @if (aiSugerencia()) {
+            <div class="ai-result">
+              <mat-icon class="ai-icon">psychology</mat-icon>
+              <div class="ai-content">
+                <strong>Sugerencia de Inteligencia Artificial</strong>
+                @if (aiSugerencia()?.tipoSugerido || aiSugerencia()?.tipo) {
+                  <p><b>Tipo sugerido:</b> {{ (aiSugerencia()?.tipoSugerido ?? aiSugerencia()?.tipo)?.replace('_',' ') }}</p>
+                }
+                @if (aiSugerencia()?.prioridadSugerida || aiSugerencia()?.prioridad) {
+                  <p><b>Prioridad sugerida:</b> {{ aiSugerencia()?.prioridadSugerida ?? aiSugerencia()?.prioridad }}</p>
+                }
+                @if (aiSugerencia()?.justificacion) {
+                  <p><b>Justificación:</b> {{ aiSugerencia()?.justificacion }}</p>
+                }
+                @if (aiSugerencia()?.mensaje) {
+                  <p>{{ aiSugerencia()?.mensaje }}</p>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="row-fields">
+            <mat-form-field appearance="outline" class="half-field">
+              <mat-label>Tipo de Solicitud</mat-label>
+              <mat-select formControlName="tipo">
+                @for (t of tipos; track t) {
+                  <mat-option [value]="t">{{ formatTipo(t) }}</mat-option>
+                }
+              </mat-select>
+              <mat-icon matSuffix>category</mat-icon>
+              @if (form.get('tipo')?.errors?.['required'] && form.get('tipo')?.touched) {
+                <mat-error>Selecciona un tipo</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-field">
+              <mat-label>Canal de Origen</mat-label>
+              <mat-select formControlName="canal">
+                @for (c of canales; track c) {
+                  <mat-option [value]="c">{{ formatCanal(c) }}</mat-option>
+                }
+              </mat-select>
+              <mat-icon matSuffix>alternate_email</mat-icon>
+              @if (form.get('canal')?.errors?.['required'] && form.get('canal')?.touched) {
+                <mat-error>Selecciona un canal</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <mat-divider class="form-divider"></mat-divider>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" routerLink="/solicitudes">
+              <mat-icon>cancel</mat-icon> Cancelar
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || submitting()">
+              @if (!submitting()) { <mat-icon>send</mat-icon> }
+              @if (submitting()) { <mat-spinner diameter="20" class="inline-spinner"></mat-spinner> }
+              {{ submitting() ? 'Enviando...' : 'Enviar Solicitud' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="side-info">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>info_outline</mat-icon>
+          <mat-card-title>Tipos de Solicitud</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="info-list">
+            <li><b>Registro de Asignatura:</b> Inscripción de materias</li>
+            <li><b>Homologación:</b> Reconocimiento de materias</li>
+            <li><b>Cancelación:</b> Cancelar una asignatura</li>
+            <li><b>Cupo:</b> Solicitud de cupo en un curso</li>
+            <li><b>Consulta Académica:</b> Dudas y consultas</li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card ai-info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>auto_awesome</mat-icon>
+          <mat-card-title>Asistente de IA</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Escribe tu descripción y usa el botón de <strong>Sugerencia de IA</strong> para que el sistema sugiera automáticamente el tipo más adecuado para tu solicitud.</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

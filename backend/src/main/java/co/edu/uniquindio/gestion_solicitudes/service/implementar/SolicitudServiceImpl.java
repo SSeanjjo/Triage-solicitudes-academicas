@@ -38,6 +38,7 @@ public class SolicitudServiceImpl implements SolicitudService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         Solicitud solicitud = new Solicitud(
+                request.getTitulo(),
                 request.getDescripcion(),
                 solicitante,
                 request.getCanalOrigen()
@@ -186,6 +187,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private SolicitudResponse mapearResponse(Solicitud solicitud) {
         SolicitudResponse response = new SolicitudResponse();
         response.setId(solicitud.getId());
+        response.setTitulo(solicitud.getTitulo());
         response.setEstado(solicitud.getEstado());
         response.setPrioridad(solicitud.getPrioridad());
         response.setTipoSolicitud(solicitud.getTipo());
@@ -195,10 +197,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         response.setObservacionCierre(solicitud.getObservacionCierre());
         response.setFechaCreacion(solicitud.getFechaCreacion());
         response.setFechaActualizacion(solicitud.getFechaActualizacion());
-        if (solicitud.getSolicitante() != null)
+        if (solicitud.getSolicitante() != null) {
             response.setSolicitanteId(solicitud.getSolicitante().getId());
-        if (solicitud.getResponsable() != null)
+            response.setSolicitanteNombre(solicitud.getSolicitante().getNombre());
+        }
+        if (solicitud.getResponsable() != null) {
             response.setResponsableId(solicitud.getResponsable().getId());
+            response.setResponsableNombre(solicitud.getResponsable().getNombre());
+        }
         return response;
     }
 

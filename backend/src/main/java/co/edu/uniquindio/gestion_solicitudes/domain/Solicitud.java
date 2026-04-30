@@ -26,6 +26,7 @@ public class Solicitud {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String titulo;
     private String descripcion;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
@@ -59,7 +60,8 @@ public class Solicitud {
 
     public Solicitud() {}
 
-    public Solicitud(String descripcion, Usuario solicitante, CanalOrigen canalOrigen) {
+    public Solicitud(String titulo, String descripcion, Usuario solicitante, CanalOrigen canalOrigen) {
+        this.titulo = titulo;
         this.descripcion = descripcion;
         this.solicitante = solicitante;
         this.canalOrigen = canalOrigen;
@@ -138,6 +140,14 @@ public class Solicitud {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTitulo() {
+        return titulo;
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
     }
 
     public String getDescripcion() {

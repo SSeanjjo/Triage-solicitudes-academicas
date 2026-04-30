@@ -1,0 +1,157 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Bienvenido, <strong>{{ auth.currentUser()?.nombre }}</strong></p>
+    </div>
+    <div class="header-actions">
+      @if (auth.hasRole(Rol.ESTUDIANTE)) {
+        <a mat-raised-button color="primary" routerLink="/solicitudes/nueva">
+          <mat-icon>add</mat-icon> Nueva Solicitud
+        </a>
+      }
+      <a mat-stroked-button routerLink="/solicitudes">
+        <mat-icon>list_alt</mat-icon> Ver Solicitudes
+      </a>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+  } @else {
+    <section class="stats-section">
+      <h2 class="section-title">
+        <mat-icon>bar_chart</mat-icon> Resumen de Solicitudes
+      </h2>
+      <div class="stats-grid">
+        <mat-card class="stat-card total">
+          <mat-card-content>
+            <mat-icon>assignment</mat-icon>
+            <div class="stat-number">{{ stats().total }}</div>
+            <div class="stat-label">Total</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card registrada">
+          <mat-card-content>
+            <mat-icon>fiber_new</mat-icon>
+            <div class="stat-number">{{ stats().registrada }}</div>
+            <div class="stat-label">Registradas</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card clasificada">
+          <mat-card-content>
+            <mat-icon>category</mat-icon>
+            <div class="stat-number">{{ stats().clasificada }}</div>
+            <div class="stat-label">Clasificadas</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card en-atencion">
+          <mat-card-content>
+            <mat-icon>engineering</mat-icon>
+            <div class="stat-number">{{ stats().enAtencion }}</div>
+            <div class="stat-label">En Atención</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card atendida">
+          <mat-card-content>
+            <mat-icon>task_alt</mat-icon>
+            <div class="stat-number">{{ stats().atendida }}</div>
+            <div class="stat-label">Atendidas</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card cerrada">
+          <mat-card-content>
+            <mat-icon>lock</mat-icon>
+            <div class="stat-number">{{ stats().cerrada }}</div>
+            <div class="stat-label">Cerradas</div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    @if (stats().total > 0) {
+      <section class="priority-section">
+        <h2 class="section-title">
+          <mat-icon>flag</mat-icon> Distribución por Prioridad
+        </h2>
+        <div class="priority-grid">
+          <mat-card class="priority-card alta">
+            <mat-card-content>
+              <mat-icon>priority_high</mat-icon>
+              <div class="stat-number">{{ stats().alta }}</div>
+              <div class="stat-label">Prioridad Alta</div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="priority-card media">
+            <mat-card-content>
+              <mat-icon>remove</mat-icon>
+              <div class="stat-number">{{ stats().media }}</div>
+              <div class="stat-label">Prioridad Media</div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="priority-card baja">
+            <mat-card-content>
+              <mat-icon>arrow_downward</mat-icon>
+              <div class="stat-number">{{ stats().baja }}</div>
+              <div class="stat-label">Prioridad Baja</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </section>
+    }
+
+    <section class="actions-section">
+      <h2 class="section-title">
+        <mat-icon>rocket_launch</mat-icon> Acciones Rápidas
+      </h2>
+      <div class="actions-grid">
+        <mat-card class="action-card" routerLink="/solicitudes" style="cursor:pointer">
+          <mat-card-content>
+            <mat-icon class="action-icon">list_alt</mat-icon>
+            <h3>Ver Solicitudes</h3>
+            <p>Consulta, filtra y gestiona todas las solicitudes académicas del sistema.</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a mat-raised-button color="primary" routerLink="/solicitudes">Ir a Solicitudes</a>
+          </mat-card-actions>
+        </mat-card>
+
+        @if (auth.hasRole(Rol.ESTUDIANTE)) {
+          <mat-card class="action-card" routerLink="/solicitudes/nueva" style="cursor:pointer">
+            <mat-card-content>
+              <mat-icon class="action-icon">add_circle_outline</mat-icon>
+              <h3>Nueva Solicitud</h3>
+              <p>Crea una nueva solicitud académica con ayuda de inteligencia artificial.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <a mat-raised-button color="accent" routerLink="/solicitudes/nueva">Crear Solicitud</a>
+            </mat-card-actions>
+          </mat-card>
+        }
+
+        @if (auth.hasRole(Rol.ADMINISTRADOR)) {
+          <mat-card class="action-card" routerLink="/usuarios" style="cursor:pointer">
+            <mat-card-content>
+              <mat-icon class="action-icon">manage_accounts</mat-icon>
+              <h3>Gestión de Usuarios</h3>
+              <p>Administra los usuarios del sistema, sus roles y estado de cuenta.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <a mat-raised-button color="warn" routerLink="/usuarios">Administrar Usuarios</a>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </section>
+  }
+</div>

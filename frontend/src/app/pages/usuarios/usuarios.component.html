@@ -1,0 +1,157 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gestión de Usuarios</h1>
+      <p class="page-sub">Administra los usuarios registrados en el sistema</p>
+    </div>
+    <button mat-stroked-button (click)="loadUsuarios()">
+      <mat-icon>refresh</mat-icon> Actualizar
+    </button>
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Rol</mat-label>
+          <mat-select formControlName="rol">
+            <mat-option value="">Todos</mat-option>
+            @for (r of roles; track r) {
+              <mat-option [value]="r">{{ getRolLabel(r) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="activo">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="true">Activos</mat-option>
+            <mat-option value="false">Inactivos</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" type="button" (click)="loadUsuarios()">
+            <mat-icon>search</mat-icon> Buscar
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner></mat-spinner></div>
+  } @else {
+    <mat-card class="table-card">
+      <mat-card-content>
+        @if (dataSource.data.length === 0) {
+          <div class="empty-state">
+            <mat-icon>person_off</mat-icon>
+            <h3>No se encontraron usuarios</h3>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table mat-table [dataSource]="dataSource" class="usuarios-table">
+
+              <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef>#</th>
+                <td mat-cell *matCellDef="let u">{{ u.id }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let u">
+                  @if (editingId() === u.id) {
+                    <mat-form-field appearance="outline" class="edit-field">
+                      <input matInput [formControl]="$any(editForm.get('nombre'))" />
+                    </mat-form-field>
+                  } @else {
+                    <div class="user-name-cell">
+                      <div class="user-avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                      <span>{{ u.nombre }}</span>
+                    </div>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="correo">
+                <th mat-header-cell *matHeaderCellDef>Correo</th>
+                <td mat-cell *matCellDef="let u">
+                  @if (editingId() === u.id) {
+                    <mat-form-field appearance="outline" class="edit-field">
+                      <input matInput type="email" [formControl]="$any(editForm.get('correo'))" />
+                    </mat-form-field>
+                  } @else {
+                    {{ u.correo }}
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="rol">
+                <th mat-header-cell *matHeaderCellDef>Rol</th>
+                <td mat-cell *matCellDef="let u">
+                  @if (editingId() === u.id) {
+                    <mat-form-field appearance="outline" class="edit-field-sm">
+                      <mat-select [formControl]="$any(editForm.get('rol'))">
+                        @for (r of roles; track r) {
+                          <mat-option [value]="r">{{ getRolLabel(r) }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  } @else {
+                    <span class="chip" [class]="getRolClass(u.rol)">{{ getRolLabel(u.rol) }}</span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="activo">
+                <th mat-header-cell *matHeaderCellDef>Estado</th>
+                <td mat-cell *matCellDef="let u">
+                  @if (editingId() === u.id) {
+                    <mat-slide-toggle [formControl]="$any(editForm.get('activo'))">
+                      {{ editForm.get('activo')?.value ? 'Activo' : 'Inactivo' }}
+                    </mat-slide-toggle>
+                  } @else {
+                    <span class="chip" [class]="u.activo ? 'chip-activo' : 'chip-inactivo'">
+                      {{ u.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let u" class="actions-cell">
+                  @if (editingId() === u.id) {
+                    <button mat-icon-button color="primary" (click)="saveEdit(u.id)" [disabled]="saveLoading()" matTooltip="Guardar">
+                      @if (saveLoading()) {
+                        <mat-spinner diameter="18"></mat-spinner>
+                      } @else {
+                        <mat-icon>check</mat-icon>
+                      }
+                    </button>
+                    <button mat-icon-button (click)="cancelEdit()" matTooltip="Cancelar">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  } @else {
+                    <button mat-icon-button color="primary" (click)="startEdit(u)" matTooltip="Editar usuario">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+            </table>
+          </div>
+
+          <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

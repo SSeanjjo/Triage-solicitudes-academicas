@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 public class SolicitudResponse {
     /** Identificador único de la solicitud. */
     private Long id;
+    /** Título breve de la solicitud. */
+    private String titulo;
     /** Estado actual en el ciclo de vida. */
     private EstadoSolicitud estado;
     /** Prioridad asignada. Nulo si aún no fue clasificada. */
@@ -28,8 +30,12 @@ public class SolicitudResponse {
     private CanalOrigen canalOrigen;
     /** Id del usuario que creó la solicitud. */
     private Long solicitanteId;
+    /** Nombre del usuario que creó la solicitud. */
+    private String solicitanteNombre;
     /** Id del responsable asignado. Nulo si aún no fue asignada. */
     private Long responsableId;
+    /** Nombre del responsable asignado. Nulo si aún no fue asignada. */
+    private String responsableNombre;
     /** Descripción original de la solicitud. */
     private String descripcion;
     /** Justificación de la prioridad asignada. */

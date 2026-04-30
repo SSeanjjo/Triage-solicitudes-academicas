@@ -1,0 +1,149 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Solicitudes Académicas</h1>
+      <p class="page-sub">Gestiona y visualiza las solicitudes del sistema</p>
+    </div>
+    @if (auth.hasRole(Rol.ESTUDIANTE, Rol.ADMINISTRADOR)) {
+      <a mat-raised-button color="primary" routerLink="/solicitudes/nueva">
+        <mat-icon>add</mat-icon> Nueva Solicitud
+      </a>
+    }
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option value="">Todos</mat-option>
+            @for (e of estados; track e) {
+              <mat-option [value]="e">{{ e.replace('_', ' ') }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Tipo</mat-label>
+          <mat-select formControlName="tipoSolicitud">
+            <mat-option value="">Todos</mat-option>
+            @for (t of tipos; track t) {
+              <mat-option [value]="t">{{ t.replace(/_/g, ' ') }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Prioridad</mat-label>
+          <mat-select formControlName="prioridad">
+            <mat-option value="">Todas</mat-option>
+            @for (p of prioridades; track p) {
+              <mat-option [value]="p">{{ p }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" type="button" (click)="applyFilter()">
+            <mat-icon>search</mat-icon> Buscar
+          </button>
+          <button mat-stroked-button type="button" (click)="clearFilters()">
+            <mat-icon>clear</mat-icon> Limpiar
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else {
+    <mat-card class="table-card">
+      <mat-card-content>
+        @if (dataSource.data.length === 0) {
+          <div class="empty-state">
+            <mat-icon>inbox</mat-icon>
+            <h3>No se encontraron solicitudes</h3>
+            <p>Intenta cambiar los filtros o crea una nueva solicitud.</p>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table mat-table [dataSource]="dataSource" matSort class="solicitudes-table">
+
+              <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>#</th>
+                <td mat-cell *matCellDef="let s">{{ s.id }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="titulo">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Título</th>
+                <td mat-cell *matCellDef="let s" class="titulo-cell">
+                  <span [matTooltip]="s.descripcion" matTooltipShowDelay="500">{{ s.titulo }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="tipo">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
+                <td mat-cell *matCellDef="let s">
+                  <span class="tipo-text">{{ formatTipo(s.tipoSolicitud) }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="estado">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+                <td mat-cell *matCellDef="let s">
+                  <span class="chip" [class]="getEstadoClass(s.estado)">
+                    {{ s.estado.replace('_', ' ') }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="prioridad">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Prioridad</th>
+                <td mat-cell *matCellDef="let s">
+                  @if (s.prioridad) {
+                    <span class="chip" [class]="getPrioridadClass(s.prioridad)">{{ s.prioridad }}</span>
+                  } @else {
+                    <span class="chip chip-sin-prioridad">—</span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="solicitante">
+                <th mat-header-cell *matHeaderCellDef>Solicitante</th>
+                <td mat-cell *matCellDef="let s">{{ s.solicitante?.nombre ?? '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="fechaCreacion">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
+                <td mat-cell *matCellDef="let s">
+                  {{ s.fechaCreacion ? (s.fechaCreacion | slice:0:10) : '—' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let s">
+                  <a mat-icon-button [routerLink]="['/solicitudes', s.id]" matTooltip="Ver detalle" color="primary">
+                    <mat-icon>visibility</mat-icon>
+                  </a>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"
+                  [routerLink]="['/solicitudes', row.id]"></tr>
+            </table>
+          </div>
+
+          <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

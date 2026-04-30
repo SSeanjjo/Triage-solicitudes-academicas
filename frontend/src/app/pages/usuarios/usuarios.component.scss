@@ -1,0 +1,144 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1a237e;
+}
+
+.page-sub {
+  margin: 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.filter-card {
+  margin-bottom: 16px;
+  border-radius: 12px !important;
+}
+
+.filter-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  min-width: 180px;
+  flex: 1;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.table-card {
+  border-radius: 12px !important;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.usuarios-table {
+  width: 100%;
+}
+
+.table-row {
+  transition: background 0.15s;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1976d2, #1a237e);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.edit-field {
+  width: 180px;
+  margin: 4px 0;
+}
+
+.edit-field-sm {
+  width: 140px;
+  margin: 4px 0;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  color: #888;
+
+  mat-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  h3 { margin: 0; }
+}
+
+/* Chips */
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-estudiante { background: #e3f2fd; color: #1565c0; }
+.chip-responsable { background: #e8f5e9; color: #2e7d32; }
+.chip-admin { background: #fce4ec; color: #880e4f; }
+.chip-activo { background: #e8f5e9; color: #2e7d32; }
+.chip-inactivo { background: #ffebee; color: #b71c1c; }

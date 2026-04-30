@@ -1,29 +1,58 @@
 openapi: 3.0.3
 info:
   title: API Sistema de Triage Académico
-  description: API REST para la gestión centralizada de solicitudes académicas.
+  description: |
+    API REST para la gestión centralizada de solicitudes académicas.
+
+    ## Autenticación
+    La API utiliza JWT (JSON Web Tokens) con esquema Bearer. Obtenga un token en
+    `POST /api/auth/login` e inclúyalo en cada solicitud protegida como:
+    `Authorization: Bearer <token>`
+
+    ## Flujo de estados de una solicitud
+    ```
+    REGISTRADA → CLASIFICADA → EN_ATENCION → ATENDIDA → CERRADA
+    ```
+    Las transiciones son estrictamente lineales; no se puede retroceder ni saltar estados.
+
+    ## Roles del sistema
+    | Rol | Permisos |
+    |-----|----------|
+    | ESTUDIANTE | Crear solicitudes, consultar las propias |
+    | RESPONSABLE | Clasificar, asignar y atender solicitudes; generar resúmenes IA |
+    | ADMINISTRADOR | Acceso completo + gestión de usuarios |
   version: 1.0.0
 
 servers:
   - url: http://localhost:8080
-    description: Servidor local
+    description: Servidor local de desarrollo
 
 security:
   - bearerAuth: []
 
 tags:
   - name: Autenticacion
+    description: Registro e inicio de sesión de usuarios
   - name: Usuarios
+    description: Gestión de usuarios (solo ADMINISTRADOR)
   - name: Solicitudes
+    description: Gestión del ciclo de vida de solicitudes académicas
   - name: Historial
+    description: Consulta del historial de cambios de una solicitud
   - name: Asignaciones
+    description: Asignación de responsables a solicitudes
+  - name: IA
+    description: Servicios de inteligencia artificial para clasificación y resúmenes
 
 paths:
+
+  # ── Autenticación ────────────────────────────────────────────────────────────
 
   /api/auth/login:
     post:
       tags: [Autenticacion]
-      summary: Autenticacion y obtención de JWT
+      summary: Iniciar sesión
+      description: Autentica al usuario con correo y contraseña. Devuelve un JWT válido por 10 horas.
       security: []
       requestBody:
         required: true
@@ -31,6 +60,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            example:
+              correo: "estudiante@uniquindio.edu.co"
+              password: "contraseña123"
       responses:
         '200':
           description: Login exitoso
@@ -39,59 +71,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '400':
-          description: Credenciales inválidas
+          description: Credenciales inválidas o campos requeridos faltantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /api/usuarios:
+  /api/auth/registro:
     post:
-      tags: [Usuarios]
-      summary: Crear usuario
+      tags: [Autenticacion]
+      summary: Registrar nuevo usuario
+      description: Crea una nueva cuenta de usuario. No requiere autenticación.
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsuarioCreate'
+              $ref: '#/components/schemas/UsuarioCreateRequest'
+            example:
+              nombre: "Sebastian Lesmes"
+              correo: "sebastian@uniquindio.edu.co"
+              password: "secreto123"
+              rol: "ESTUDIANTE"
       responses:
         '201':
-          description: Usuario creado
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
         '400':
-          description: Datos inválidos
-        '403':
-          description: No autorizado
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '409':
+          description: El correo ya está registrado en el sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
+  # ── Usuarios ─────────────────────────────────────────────────────────────────
+
+  /api/usuarios:
     get:
       tags: [Usuarios]
       summary: Listar usuarios
+      description: Retorna todos los usuarios del sistema. Solo ADMINISTRADOR.
       parameters:
         - in: query
           name: activo
+          required: false
           schema:
             type: boolean
+          description: Filtrar por estado activo (`true`) o inactivo (`false`)
         - in: query
           name: rol
+          required: false
           schema:
             $ref: '#/components/schemas/Rol'
+          description: Filtrar por rol
       responses:
         '200':
           description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsuarioResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: No autorizado
+          $ref: '#/components/responses/Forbidden'
 
   /api/usuarios/{id}:
     get:
       tags: [Usuarios]
       summary: Obtener usuario por ID
+      description: Retorna los datos de un usuario específico. Solo ADMINISTRADOR.
       parameters:
         - $ref: '#/components/parameters/UsuarioId'
       responses:
         '200':
           description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Usuario no encontrado
+          $ref: '#/components/responses/NotFound'
 
     put:
       tags: [Usuarios]
       summary: Actualizar usuario
+      description: Actualiza nombre y/o correo de un usuario. Solo ADMINISTRADOR.
       parameters:
         - $ref: '#/components/parameters/UsuarioId'
       requestBody:
@@ -99,57 +180,99 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsuarioUpdate'
+              $ref: '#/components/schemas/UsuarioUpdateRequest'
       responses:
         '200':
-          description: Usuario actualizado
+          description: Usuario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
         '400':
-          description: Datos inválidos
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Usuario no encontrado
+          $ref: '#/components/responses/NotFound'
+
+  # ── Solicitudes ───────────────────────────────────────────────────────────────
 
   /api/solicitudes:
     post:
       tags: [Solicitudes]
-      summary: Registrar solicitud
+      summary: Registrar nueva solicitud
+      description: |
+        Crea una nueva solicitud académica con estado inicial **REGISTRADA**.
+        Solo puede ser ejecutado por usuarios con rol **ESTUDIANTE**.
+        El solicitante se obtiene automáticamente del token JWT.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SolicitudCreate'
+              $ref: '#/components/schemas/SolicitudCreateRequest'
+            example:
+              titulo: "Registro en Programación Avanzada 2026-1"
+              tipoSolicitud: "REGISTRO_ASIGNATURA"
+              descripcion: "Solicito el registro en la asignatura de Programación Avanzada para el semestre 2026-1 ya que no aparece disponible en el sistema de inscripciones."
+              canalOrigen: "CSU"
       responses:
         '201':
-          description: Solicitud creada
+          description: Solicitud creada exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
         '400':
-          description: Datos inválidos
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: No autorizado
+          $ref: '#/components/responses/Forbidden'
 
     get:
       tags: [Solicitudes]
-      summary: Consultar solicitudes con filtros
+      summary: Listar solicitudes con filtros
+      description: |
+        Retorna solicitudes según los filtros aplicados.
+        - **ESTUDIANTE**: Solo puede ver sus propias solicitudes
+        - **RESPONSABLE / ADMINISTRADOR**: Puede ver todas las solicitudes
       parameters:
         - in: query
           name: estado
+          required: false
           schema:
             $ref: '#/components/schemas/EstadoSolicitud'
+          description: Filtrar por estado
         - in: query
-          name: tipoSolicitud
+          name: tipo
+          required: false
           schema:
             $ref: '#/components/schemas/TipoSolicitud'
+          description: Filtrar por tipo de solicitud
         - in: query
           name: prioridad
+          required: false
           schema:
             $ref: '#/components/schemas/PrioridadSolicitud'
+          description: Filtrar por prioridad
         - in: query
           name: responsableId
+          required: false
           schema:
             type: integer
+            format: int64
+          description: Filtrar por ID del responsable asignado
       responses:
         '200':
           description: Lista de solicitudes
@@ -158,30 +281,42 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Solicitud'
+                  $ref: '#/components/schemas/SolicitudResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: No autorizado
+          $ref: '#/components/responses/Forbidden'
 
   /api/solicitudes/{id}:
     get:
       tags: [Solicitudes]
-      summary: Obtener detalle de solicitud
+      summary: Obtener detalle de una solicitud
+      description: Retorna todos los campos de una solicitud específica.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       responses:
         '200':
-          description: Detalle de solicitud
+          description: Solicitud encontrada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Solicitud no encontrada
+          $ref: '#/components/responses/NotFound'
 
   /api/solicitudes/{id}/clasificar:
     patch:
       tags: [Solicitudes]
-      summary: Clasificar solicitud (REGISTRADA → CLASIFICADA)
+      summary: Clasificar solicitud
+      description: |
+        Asigna tipo, prioridad y justificación a la solicitud.
+        Transición de estado: **REGISTRADA → CLASIFICADA**
+        Roles permitidos: **RESPONSABLE**, **ADMINISTRADOR**
+        El usuario que clasifica se obtiene automáticamente del token JWT.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -190,22 +325,41 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ClasificacionRequest'
+            example:
+              tipoSolicitud: "REGISTRO_ASIGNATURA"
+              prioridad: "ALTA"
+              justificacionPrioridad: "Caso urgente: el período de inscripciones cierra esta semana."
       responses:
         '200':
-          description: Solicitud clasificada
+          description: Solicitud clasificada exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Solicitud no encontrada
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: Transición de estado inválida
+          $ref: '#/components/responses/InvalidStateTransition'
 
   /api/solicitudes/{id}/asignar:
     patch:
       tags: [Asignaciones]
-      summary: Asignar responsable (CLASIFICADA → EN_ATENCION)
+      summary: Asignar responsable a la solicitud
+      description: |
+        Asigna un responsable y pone la solicitud en atención.
+        Transición de estado: **CLASIFICADA → EN_ATENCION**
+        Roles permitidos: **RESPONSABLE** (puede asignarse a sí mismo), **ADMINISTRADOR** (elige de la lista)
+        El usuario que asigna se obtiene automáticamente del token JWT.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -214,22 +368,39 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AsignacionRequest'
+            example:
+              responsableId: 7
       responses:
         '200':
-          description: Solicitud asignada
+          description: Responsable asignado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Solicitud no encontrada
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: Transición de estado inválida
+          $ref: '#/components/responses/InvalidStateTransition'
 
   /api/solicitudes/{id}/atender:
     patch:
       tags: [Solicitudes]
-      summary: Marcar solicitud como atendida (EN_ATENCION → ATENDIDA)
+      summary: Marcar solicitud como atendida
+      description: |
+        Registra que la solicitud fue atendida con un comentario obligatorio.
+        Transición de estado: **EN_ATENCION → ATENDIDA**
+        Roles permitidos: **RESPONSABLE**, **ADMINISTRADOR**
+        El usuario que atiende se obtiene automáticamente del token JWT.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -238,22 +409,39 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AtenderRequest'
+            example:
+              comentario: "Se realizó el registro de la asignatura en el sistema académico. Proceso completado."
       responses:
         '200':
           description: Solicitud marcada como atendida
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Solicitud no encontrada
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: Transición de estado inválida
+          $ref: '#/components/responses/InvalidStateTransition'
 
   /api/solicitudes/{id}/cerrar:
     patch:
       tags: [Solicitudes]
-      summary: Cerrar solicitud (ATENDIDA → CERRADA)
+      summary: Cerrar solicitud
+      description: |
+        Formaliza el cierre de la solicitud con una observación obligatoria.
+        Transición de estado: **ATENDIDA → CERRADA**
+        Roles permitidos: **RESPONSABLE**, **ADMINISTRADOR**
+        El usuario que cierra se obtiene automáticamente del token JWT.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       requestBody:
@@ -262,35 +450,139 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CierreRequest'
+            example:
+              comentarioCierre: "Solicitud resuelta y verificada. El estudiante confirmó la resolución del caso."
       responses:
         '200':
-          description: Solicitud cerrada
+          description: Solicitud cerrada exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Solicitud'
+                $ref: '#/components/schemas/SolicitudResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Solicitud no encontrada
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: Transición de estado inválida
+          $ref: '#/components/responses/InvalidStateTransition'
 
   /api/solicitudes/{id}/historial:
     get:
       tags: [Historial]
-      summary: Obtener historial de la solicitud
+      summary: Obtener historial de cambios
+      description: Retorna la línea de tiempo completa de acciones realizadas sobre una solicitud.
       parameters:
         - $ref: '#/components/parameters/SolicitudId'
       responses:
         '200':
-          description: Historial obtenido
+          description: Historial obtenido exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/HistorialEvento'
+                  $ref: '#/components/schemas/HistorialEventoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Inteligencia Artificial ───────────────────────────────────────────────────
+
+  /api/ia/sugerencias/clasificacion:
+    post:
+      tags: [IA]
+      summary: Sugerir clasificación con IA
+      description: |
+        Analiza la descripción de una solicitud y sugiere el tipo y prioridad más adecuados.
+        Utiliza **Gemini 2.5 Flash Lite**. Si el servicio no está disponible, retorna una
+        clasificación basada en reglas heurísticas (fallback automático).
+        Roles permitidos: **ESTUDIANTE**, **RESPONSABLE**, **ADMINISTRADOR**
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SugerenciaIARequest'
+            example:
+              descripcion: "Necesito registrarme en la materia de Cálculo II pero no aparece disponible en el portal de inscripciones."
+      responses:
+        '200':
+          description: Sugerencia generada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SugerenciaIAResponse'
+        '400':
+          description: Descripción inválida o muy corta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: Servicio de IA no disponible (sin fallback)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ia/resumen:
+    post:
+      tags: [IA]
+      summary: Generar resumen de una solicitud con IA
+      description: |
+        Genera un resumen estructurado de una solicitud para facilitar su gestión.
+        Utiliza **Gemini 2.5 Flash Lite**. Si el servicio falla, retorna un resumen por reglas.
+        Roles permitidos: **RESPONSABLE**, **ADMINISTRADOR**
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumenIARequest'
+            example:
+              solicitudId: 42
+      responses:
+        '200':
+          description: Resumen generado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenIAResponse'
+        '400':
+          description: ID de solicitud inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: Solicitud no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Servicio de IA no disponible (sin fallback)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
 
@@ -299,26 +591,81 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Token JWT obtenido en `POST /api/auth/login`. Válido por 10 horas.
 
   parameters:
     UsuarioId:
       name: id
       in: path
       required: true
+      description: ID único del usuario
       schema:
         type: integer
+        format: int64
+        example: 1
 
     SolicitudId:
       name: id
       in: path
       required: true
+      description: ID único de la solicitud
       schema:
         type: integer
+        format: int64
+        example: 42
+
+  responses:
+    Unauthorized:
+      description: Token JWT ausente, inválido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 401
+            mensaje: "Token inválido o expirado"
+            timestamp: "2026-04-26T10:30:00"
+
+    Forbidden:
+      description: El usuario no tiene el rol requerido para esta operación
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 403
+            mensaje: "Acceso denegado"
+            timestamp: "2026-04-26T10:30:00"
+
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 404
+            mensaje: "Recurso no encontrado"
+            timestamp: "2026-04-26T10:30:00"
+
+    InvalidStateTransition:
+      description: La transición de estado no es válida para el estado actual de la solicitud
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 409
+            mensaje: "La solicitud debe estar en estado REGISTRADA para ser clasificada"
+            timestamp: "2026-04-26T10:30:00"
 
   schemas:
 
+    # ── Enums ──────────────────────────────────────────────────────────────────
+
     Rol:
       type: string
+      description: Rol del usuario en el sistema
       enum:
         - ESTUDIANTE
         - RESPONSABLE
@@ -326,6 +673,7 @@ components:
 
     EstadoSolicitud:
       type: string
+      description: Estado actual de la solicitud en el flujo de gestión
       enum:
         - REGISTRADA
         - CLASIFICADA
@@ -335,174 +683,394 @@ components:
 
     PrioridadSolicitud:
       type: string
+      description: Nivel de urgencia de la solicitud
       enum:
         - ALTA
         - MEDIA
         - BAJA
 
-
-
-
     TipoSolicitud:
       type: string
+      description: Categoría de la solicitud académica
       enum:
-      - REGISTRO_ASIGNATURA
-      - HOMOLOGACION
-      - CANCELACION
-      - CUPO
-      - CONSULTA_ACADEMICA
+        - REGISTRO_ASIGNATURA
+        - HOMOLOGACION
+        - CANCELACION
+        - CUPO
+        - CONSULTA_ACADEMICA
 
     CanalOrigen:
       type: string
+      description: Canal por el cual se recibió la solicitud
       enum:
         - CSU
         - CORREO
         - SAC
         - TELEFONICO
 
-    Solicitud:
-      type: object
-      properties:
-        id:
-          type: integer
-        estado:
-          $ref: '#/components/schemas/EstadoSolicitud'
-        prioridad:
-          $ref: '#/components/schemas/PrioridadSolicitud'
-        tipoSolicitud:
-          $ref: '#/components/schemas/TipoSolicitud'
-        canalOrigen:
-          $ref: '#/components/schemas/CanalOrigen'
-        solicitanteId:
-          type: integer
-        responsableId:
-          type: integer
-          nullable: true
-        descripcion:
-          type: string
-        justificacionPrioridad:
-          type: string
-          description: Justificación de la prioridad asignada (RF-03)
-        observacionCierre:
-          type: string
-          nullable: true
-          description: Observación registrada al cerrar la solicitud (RF-08)
-        fechaCreacion:
-          type: string
-          format: date-time
-        fechaActualizacion:
-          type: string
-          format: date-time
-
-    HistorialEvento:
-      type: object
-      properties:
-        id:
-          type: integer
-        solicitudId:
-          type: integer
-        usuarioId:
-          type: integer
-        accion:
-          type: string
-        estadoAnterior:
-          $ref: '#/components/schemas/EstadoSolicitud'
-        estadoNuevo:
-          $ref: '#/components/schemas/EstadoSolicitud'
-        fecha:
-          type: string
-          format: date-time
-        comentario:
-          type: string
+    # ── Request schemas ────────────────────────────────────────────────────────
 
     LoginRequest:
       type: object
-      required: [correo, password]
+      required:
+        - correo
+        - password
       properties:
         correo:
           type: string
           format: email
+          description: Correo electrónico registrado
+          example: "usuario@uniquindio.edu.co"
         password:
           type: string
+          description: Contraseña del usuario
+          example: "contraseña123"
+
+    UsuarioCreateRequest:
+      type: object
+      required:
+        - nombre
+        - correo
+        - password
+        - rol
+      properties:
+        nombre:
+          type: string
+          description: Nombre completo del usuario
+          minLength: 3
+          maxLength: 100
+          example: "Sebastian Lesmes"
+        correo:
+          type: string
+          format: email
+          description: Correo electrónico (debe ser único en el sistema)
+          example: "sebastian@uniquindio.edu.co"
+        password:
+          type: string
+          description: Contraseña (mínimo 6 caracteres)
+          minLength: 6
+          maxLength: 100
+          example: "secreto123"
+        rol:
+          $ref: '#/components/schemas/Rol'
+
+    UsuarioUpdateRequest:
+      type: object
+      description: Todos los campos son opcionales. Solo se actualiza lo que se envía.
+      properties:
+        nombre:
+          type: string
+          description: Nuevo nombre del usuario
+          minLength: 3
+          maxLength: 100
+          example: "Sebastian Lesmes Martínez"
+        correo:
+          type: string
+          format: email
+          description: Nuevo correo electrónico
+          example: "nuevo@uniquindio.edu.co"
+
+    SolicitudCreateRequest:
+      type: object
+      required:
+        - titulo
+        - tipoSolicitud
+        - descripcion
+        - canalOrigen
+      properties:
+        titulo:
+          type: string
+          description: Título breve y descriptivo de la solicitud
+          minLength: 5
+          maxLength: 150
+          example: "Registro en Programación Avanzada 2026-1"
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        descripcion:
+          type: string
+          description: Descripción detallada de la solicitud
+          minLength: 10
+          maxLength: 1000
+          example: "Solicito el registro en la asignatura de Programación Avanzada para el semestre 2026-1 ya que no aparece en el sistema."
+        canalOrigen:
+          $ref: '#/components/schemas/CanalOrigen'
+
+    ClasificacionRequest:
+      type: object
+      required:
+        - tipoSolicitud
+        - prioridad
+        - justificacionPrioridad
+      properties:
+        tipoSolicitud:
+          $ref: '#/components/schemas/TipoSolicitud'
+        prioridad:
+          $ref: '#/components/schemas/PrioridadSolicitud'
+        justificacionPrioridad:
+          type: string
+          description: Justificación obligatoria de la prioridad asignada
+          minLength: 10
+          maxLength: 500
+          example: "Caso urgente: el período de inscripciones cierra esta semana."
+
+    AsignacionRequest:
+      type: object
+      required:
+        - responsableId
+      properties:
+        responsableId:
+          type: integer
+          format: int64
+          description: ID del usuario con rol RESPONSABLE que atenderá la solicitud
+          example: 7
+
+    AtenderRequest:
+      type: object
+      required:
+        - comentario
+      properties:
+        comentario:
+          type: string
+          description: Observación sobre la atención realizada
+          minLength: 10
+          maxLength: 500
+          example: "Se realizó el registro de la asignatura en el sistema académico."
+
+    CierreRequest:
+      type: object
+      required:
+        - comentarioCierre
+      properties:
+        comentarioCierre:
+          type: string
+          description: Observación obligatoria para formalizar el cierre
+          minLength: 10
+          maxLength: 500
+          example: "Solicitud atendida y verificada. El estudiante confirmó la resolución del caso."
+
+    SugerenciaIARequest:
+      type: object
+      required:
+        - descripcion
+      properties:
+        descripcion:
+          type: string
+          description: Texto de la solicitud a analizar
+          minLength: 10
+          maxLength: 1000
+          example: "Necesito registrarme en la materia de Cálculo II pero no aparece disponible en el portal."
+
+    ResumenIARequest:
+      type: object
+      required:
+        - solicitudId
+      properties:
+        solicitudId:
+          type: integer
+          format: int64
+          description: ID de la solicitud a resumir
+          example: 42
+
+    # ── Response schemas ───────────────────────────────────────────────────────
 
     LoginResponse:
       type: object
       properties:
         token:
           type: string
+          description: Token JWT para incluir en el header Authorization
+          example: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c3VhcmlvQHVuaXF1aW5kaW8uZWR1LmNvIn0.abc"
         tipo:
           type: string
-          example: Bearer
+          description: Tipo de autenticación
+          example: "Bearer"
         rol:
           $ref: '#/components/schemas/Rol'
         nombre:
           type: string
+          description: Nombre completo del usuario autenticado
+          example: "Sebastian Lesmes"
 
-    UsuarioCreate:
+    UsuarioResponse:
       type: object
-      required: [nombre, correo, password, rol]
       properties:
+        id:
+          type: integer
+          format: int64
+          example: 5
         nombre:
           type: string
+          example: "Sebastian Lesmes"
         correo:
           type: string
           format: email
-        password:
-          type: string
+          example: "sebastian@uniquindio.edu.co"
         rol:
           $ref: '#/components/schemas/Rol'
+        activo:
+          type: boolean
+          description: Indica si la cuenta está activa en el sistema
+          example: true
 
-    UsuarioUpdate:
+    SolicitudResponse:
       type: object
       properties:
-        nombre:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        titulo:
           type: string
-        correo:
-          type: string
-          format: email
-
-    SolicitudCreate:
-      type: object
-      required: [tipoSolicitud, descripcion, canalOrigen]
-      properties:
+          description: Título breve de la solicitud
+          example: "Registro en Programación Avanzada 2026-1"
+        estado:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        prioridad:
+          allOf:
+            - $ref: '#/components/schemas/PrioridadSolicitud'
+          nullable: true
+          description: Null hasta que la solicitud sea clasificada
         tipoSolicitud:
-          $ref: '#/components/schemas/TipoSolicitud'
-        descripcion:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/TipoSolicitud'
+          nullable: true
+          description: Puede cambiar al clasificar si el responsable corrige el tipo inicial
         canalOrigen:
           $ref: '#/components/schemas/CanalOrigen'
-
-    ClasificacionRequest:
-      type: object
-      required: [tipoSolicitud, prioridad, justificacionPrioridad]
-      properties:
-        tipoSolicitud:
-          $ref: '#/components/schemas/TipoSolicitud'
-        prioridad:
-          $ref: '#/components/schemas/PrioridadSolicitud'
-        justificacionPrioridad:
-          type: string
-          description: Justificación obligatoria de la prioridad asignada (RF-03)
-
-    AsignacionRequest:
-      type: object
-      required: [responsableId]
-      properties:
+        solicitanteId:
+          type: integer
+          format: int64
+          description: ID del usuario que creó la solicitud
+          example: 3
         responsableId:
           type: integer
+          format: int64
+          nullable: true
+          description: ID del responsable asignado. Null si aún no se ha asignado.
+          example: 7
+        descripcion:
+          type: string
+          example: "Solicito el registro en la asignatura de Programación Avanzada."
+        justificacionPrioridad:
+          type: string
+          nullable: true
+          description: Justificación de la prioridad. Null hasta que sea clasificada.
+          example: "Caso urgente por cierre de inscripciones."
+        observacionCierre:
+          type: string
+          nullable: true
+          description: Observación de cierre. Null hasta que la solicitud sea cerrada.
+          example: "Solicitud resuelta satisfactoriamente."
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2026-04-26T10:30:00"
+        fechaActualizacion:
+          type: string
+          format: date-time
+          example: "2026-04-26T14:45:00"
 
-    AtenderRequest:
+    HistorialEventoResponse:
       type: object
-      required: [comentario]
       properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        solicitudId:
+          type: integer
+          format: int64
+          example: 42
+        usuarioId:
+          type: integer
+          format: int64
+          description: ID del usuario que realizó la acción
+          example: 5
+        accion:
+          type: string
+          description: Descripción de la acción realizada
+          example: "Solicitud clasificada"
+        estadoAnterior:
+          allOf:
+            - $ref: '#/components/schemas/EstadoSolicitud'
+          nullable: true
+          description: Estado previo a la acción. Null en la entrada de creación.
+        estadoNuevo:
+          $ref: '#/components/schemas/EstadoSolicitud'
+        fecha:
+          type: string
+          format: date-time
+          example: "2026-04-26T11:00:00"
         comentario:
           type: string
-          description: Observación de la atención realizada
+          nullable: true
+          description: Comentario adicional registrado en la acción
+          example: "Caso urgente por período de inscripciones."
 
-    CierreRequest:
+    SugerenciaIAResponse:
       type: object
-      required: [comentarioCierre]
       properties:
-        comentarioCierre:
+        tipoSugerido:
+          $ref: '#/components/schemas/TipoSolicitud'
+        prioridadSugerida:
+          $ref: '#/components/schemas/PrioridadSolicitud'
+        confianza:
+          type: number
+          format: float
+          description: Nivel de confianza de la sugerencia (0.0 = mínima, 1.0 = máxima)
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.87
+        explicacion:
           type: string
-          description: Observación obligatoria para formalizar el cierre de la solicitud
+          description: Justificación textual de la sugerencia generada por la IA
+          example: "La descripción menciona explícitamente el registro de una asignatura, lo que indica REGISTRO_ASIGNATURA con alta confianza."
+
+    ResumenIAResponse:
+      type: object
+      properties:
+        resumen:
+          type: string
+          description: Resumen estructurado de la solicitud
+          example: "El estudiante solicita inscripción en Programación Avanzada (2026-1). Estado actual: CLASIFICADA con prioridad ALTA. Responsable asignado: Carlos López."
+        generadoPor:
+          type: string
+          description: Modelo o sistema que generó el resumen
+          example: "Gemini 2.5 Flash Lite"
+
+    ErrorResponse:
+      type: object
+      description: Respuesta estándar de error
+      properties:
+        status:
+          type: integer
+          description: Código HTTP del error
+          example: 404
+        mensaje:
+          type: string
+          description: Descripción del error
+          example: "Solicitud no encontrada con id: 42"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-26T10:30:00"
+
+    ValidationErrorResponse:
+      type: object
+      description: Respuesta de error con detalle de campos que fallaron validación
+      properties:
+        status:
+          type: integer
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-26T10:30:00"
+        errores:
+          type: object
+          description: Mapa de campo → mensaje de error de validación
+          additionalProperties:
+            type: string
+          example:
+            correo: "El correo no tiene formato válido"
+            password: "La contraseña debe tener mínimo 6 caracteres"

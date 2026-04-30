@@ -19,6 +19,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class SolicitudCreateRequest {
+    /** Título breve de la solicitud. */
+    @NotBlank(message = "El título es obligatorio")
+    @Size(min = 5, max = 150, message = "El título debe tener entre 5 y 150 caracteres")
+    private String titulo;
+
     /** Tipo de solicitud académica. */
     @NotNull(message = "El tipo de solicitud es obligatorio")
     private TipoSolicitud tipoSolicitud;
