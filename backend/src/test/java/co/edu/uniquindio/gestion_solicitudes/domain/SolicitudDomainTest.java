@@ -17,7 +17,7 @@ class SolicitudDomainTest {
     void setUp() {
         solicitante = new Usuario("Juan Perez", "juan@test.com", "password", true, Rol.ESTUDIANTE);
         responsable = new Usuario("Carlos", "carlos@test.com", "password", true, Rol.RESPONSABLE);
-        solicitud = new Solicitud("Solicito homologación", solicitante, CanalOrigen.CORREO);
+        solicitud = new Solicitud("Solicito homologación", "Descripcion de prueba", solicitante, CanalOrigen.CORREO);
     }
 
     @Test

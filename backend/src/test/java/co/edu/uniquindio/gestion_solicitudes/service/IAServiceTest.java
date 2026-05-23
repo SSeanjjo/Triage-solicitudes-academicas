@@ -33,9 +33,8 @@ class IAServiceTest {
     @BeforeEach
     void setUp() {
         solicitante = new Usuario("Juan Perez", "juan@test.com", "password", true, Rol.ESTUDIANTE);
-        solicitud = new Solicitud("Solicito homologación urgente", solicitante, CanalOrigen.CORREO);
-        solicitud.clasificar(TipoSolicitud.HOMOLOGACION, PrioridadSolicitud.ALTA, "justificacion");
-    }
+        solicitud = new Solicitud("Solicito homologación urgente", "Descripcion de prueba", solicitante, CanalOrigen.CORREO);
+        solicitud.clasificar(TipoSolicitud.HOMOLOGACION, PrioridadSolicitud.ALTA, "justificacion");    }
 
     @Test
     void sugerirClasificacion_cuandoContieneHomologacion_debeSugerirHomologacion() {

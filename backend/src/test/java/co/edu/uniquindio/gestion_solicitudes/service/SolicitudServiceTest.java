@@ -50,13 +50,13 @@ class SolicitudServiceTest {
     void setUp() {
         solicitante = new Usuario("Juan Perez", "juan@test.com", "password", true, Rol.ESTUDIANTE);
         responsable = new Usuario("Carlos", "carlos@test.com", "password", true, Rol.RESPONSABLE);
-        solicitud = new Solicitud("Solicito homologación", solicitante, CanalOrigen.CORREO);
+        solicitud = new Solicitud("Solicito homologación", "Descripcion de prueba", solicitante, CanalOrigen.CORREO);
     }
 
     @Test
     void crear_cuandoDatosCorrectos_debeCrearSolicitud() {
-        SolicitudCreateRequest request = new SolicitudCreateRequest(
-                TipoSolicitud.HOMOLOGACION, "Solicito homologación", CanalOrigen.CORREO);
+        SolicitudCreateRequest request = new SolicitudCreateRequest("Solicito homologación", TipoSolicitud.HOMOLOGACION, "Descripcion de prueba", CanalOrigen.CORREO);
+
 
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(solicitante));
         when(solicitudRepository.save(any(Solicitud.class))).thenReturn(solicitud);
@@ -71,8 +71,7 @@ class SolicitudServiceTest {
 
     @Test
     void crear_cuandoUsuarioNoExiste_debeLanzarExcepcion() {
-        SolicitudCreateRequest request = new SolicitudCreateRequest(
-                TipoSolicitud.HOMOLOGACION, "Solicito homologación", CanalOrigen.CORREO);
+        SolicitudCreateRequest request = new SolicitudCreateRequest("Solicito homologación", TipoSolicitud.HOMOLOGACION, "Descripcion de prueba", CanalOrigen.CORREO);
 
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
