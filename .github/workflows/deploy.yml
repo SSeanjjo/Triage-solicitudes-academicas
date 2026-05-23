@@ -1,0 +1,39 @@
+name: CD — Despliegue a Render
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Desplegar a Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Desplegar Backend en Render
+        run: |
+          curl -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+
+      - name: Esperar 10 segundos
+        run: sleep 10
+
+      - name: Desplegar Frontend en Render
+        run: |
+          curl -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+
+      - name: Resumen del despliegue
+        run: |
+          echo "✅ Despliegue iniciado en Render"
+          echo "Backend Service: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}"
+          echo "Frontend Service: ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}"
