@@ -1,19 +1,19 @@
 name: CD — Despliegue a Render
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI — Tests y Build"]  # ← debe ser el name exacto de tu ci.yml
+    types:
+      - completed
     branches: [main]
 
 jobs:
   deploy:
     name: Desplegar a Render
     runs-on: ubuntu-latest
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # ← solo si CI pasó
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
-      - name: Desplegar Backend en Render
+      - name: Desplegar Backend
         run: |
           curl -X POST \
             "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
@@ -21,19 +21,10 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"clearCache": false}'
 
-      - name: Esperar 10 segundos
-        run: sleep 10
-
-      - name: Desplegar Frontend en Render
+      - name: Desplegar Frontend
         run: |
           curl -X POST \
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{"clearCache": false}'
-
-      - name: Resumen del despliegue
-        run: |
-          echo "✅ Despliegue iniciado en Render"
-          echo "Backend Service: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}"
-          echo "Frontend Service: ${{ secrets.RENDER_FRONTEND_SERVICE_ID }}"
