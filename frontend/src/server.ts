@@ -8,8 +8,6 @@ import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
 
-process.env['ANGULAR_SSR_ALLOWED_HOSTS'] = '*';
-
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
@@ -26,7 +24,7 @@ app.use('/api', createProxyMiddleware({
     error: (_err, _req, res) => {
       const response = res as express.Response;
       if (typeof response.status === 'function') {
-        response.status(502).json({ mensaje: 'No se pudo conectar con el servidor. Inténtalo de nuevo.' });
+        response.status(502).json({ mensaje: 'No se pudo conectar con el servidor.' });
       }
     },
   },
@@ -41,6 +39,8 @@ app.use(
 );
 
 app.use((req, res, next) => {
+  // Forzar el host permitido para evitar el error de SSR
+  req.headers['host'] = 'localhost';
   angularApp
     .handle(req)
     .then((response) =>
@@ -52,9 +52,7 @@ app.use((req, res, next) => {
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   app.listen(port, (error) => {
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
     console.log(`Node Express server listening on http://localhost:${port}`);
   });
 }
