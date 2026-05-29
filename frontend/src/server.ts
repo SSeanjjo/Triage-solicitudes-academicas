@@ -15,7 +15,19 @@ const angularApp = new AngularNodeAppEngine();
 
 // Redirige todas las peticiones /api al backend (configurable por variable de entorno)
 const apiTarget = process.env['API_URL'] || 'http://localhost:8080';
-app.use('/api', createProxyMiddleware({ target: apiTarget, changeOrigin: true }));
+app.use('/api', createProxyMiddleware({
+  target: apiTarget,
+  changeOrigin: true,
+  proxyTimeout: 15000,
+  on: {
+    error: (_err, _req, res) => {
+      const response = res as express.Response;
+      if (typeof response.status === 'function') {
+        response.status(502).json({ mensaje: 'No se pudo conectar con el servidor. Inténtalo de nuevo.' });
+      }
+    },
+  },
+}));
 
 app.use(
   express.static(browserDistFolder, {
