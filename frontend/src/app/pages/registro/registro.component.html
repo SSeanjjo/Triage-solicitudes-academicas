@@ -18,7 +18,7 @@
             @if (form.get('nombre')?.errors?.['required'] && form.get('nombre')?.touched) {
               <mat-error>El nombre es requerido</mat-error>
             } @else if (form.get('nombre')?.errors?.['minlength'] && form.get('nombre')?.touched) {
-              <mat-error>El nombre debe tener al menos 2 caracteres</mat-error>
+              <mat-error>El nombre debe tener al menos 3 caracteres</mat-error>
             }
           </mat-form-field>
 
@@ -42,16 +42,6 @@
             @if (form.get('password')?.errors?.['minlength'] && form.get('password')?.touched) {
               <mat-error>La contraseña debe tener al menos 6 caracteres</mat-error>
             }
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Rol</mat-label>
-            <mat-select formControlName="rol">
-              @for (r of roles; track r.value) {
-                <mat-option [value]="r.value">{{ r.label }}</mat-option>
-              }
-            </mat-select>
-            <mat-icon matSuffix>badge</mat-icon>
           </mat-form-field>
 
           <button

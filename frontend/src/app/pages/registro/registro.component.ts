@@ -6,7 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
@@ -18,7 +17,7 @@ import { Rol } from '../../core/models/user.model';
   imports: [
     RouterModule, ReactiveFormsModule,
     MatCardModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatIconModule, MatSelectModule,
+    MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatSnackBarModule,
   ],
   templateUrl: './registro.component.html',
@@ -32,23 +31,18 @@ export class RegistroComponent {
 
   loading = false;
   hidePassword = true;
-  roles = [
-    { value: Rol.ESTUDIANTE, label: 'Estudiante' },
-    { value: Rol.RESPONSABLE, label: 'Responsable Académico' },
-    { value: Rol.ADMINISTRADOR, label: 'Administrador' },
-  ];
 
   form = this.fb.group({
-    nombre: ['', [Validators.required, Validators.minLength(2)]],
+    nombre: ['', [Validators.required, Validators.minLength(3)]],
     correo: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    rol: [Rol.ESTUDIANTE, Validators.required],
   });
 
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
-    this.auth.registro(this.form.value as any).subscribe({
+    const request = { ...this.form.value, rol: Rol.ESTUDIANTE };
+    this.auth.registro(request as any).subscribe({
       next: () => {
         this.loading = false;
         this.snackBar.open('¡Registro exitoso! Ahora puedes iniciar sesión.', 'OK', { duration: 5000 });
@@ -56,7 +50,11 @@ export class RegistroComponent {
       },
       error: (err) => {
         this.loading = false;
-        const msg = err.error?.message || 'Error al registrar el usuario. Inténtalo de nuevo.';
+        const errores = err.error?.errores;
+        const msg = err.error?.mensaje
+          || err.error?.message
+          || (errores ? Object.values(errores).join(', ') : null)
+          || 'Error al registrar el usuario. Inténtalo de nuevo.';
         this.snackBar.open(msg, 'Cerrar', { duration: 5000, panelClass: 'snack-error' });
       },
     });
