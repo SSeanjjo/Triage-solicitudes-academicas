@@ -2,8 +2,6 @@ package co.edu.uniquindio.gestion_solicitudes.configuracion;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,52 +13,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.List;
 
-/**
- * Configuración de seguridad de la aplicación basada en JWT y Spring Security.
- * <p>
- * Define las rutas públicas, las rutas protegidas por rol, la política
- * de sesiones stateless y el filtro JWT que valida cada petición entrante.
- * </p>
- *
- * @author Manu-Z
- * @version 1.0
- * @see JwtFilter
- * @see JwtUtil
- */
 @Configuration
-@EnableWebSecurity(debug = false)
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
-    // Dentro de la clase, agrega este Bean:
-
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 
-    /**
-     * Configura la cadena de filtros de seguridad HTTP.
-     * <ul>
-     *   <li>Deshabilita CSRF (API stateless)</li>
-     *   <li>Sesiones stateless (sin HttpSession)</li>
-     *   <li>Rutas {@code /api/auth/**} públicas</li>
-     *   <li>Resto de rutas requieren autenticación</li>
-     *   <li>Agrega {@link JwtFilter} antes del filtro estándar</li>
-     * </ul>
-     *
-     * @param http configuración HTTP de Spring Security
-     * @return cadena de filtros configurada
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -80,20 +46,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedOrigins(List.of(
+                "https://triage-frontend-y623.onrender.com",
+                "http://localhost:4200"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
-    /**
-     * Bean del codificador de contraseñas usando algoritmo BCrypt.
-     *
-     * @return instancia de {@link BCryptPasswordEncoder}
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
