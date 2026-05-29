@@ -15,6 +15,7 @@ const angularApp = new AngularNodeAppEngine();
 
 // Redirige todas las peticiones /api al backend (configurable por variable de entorno)
 const apiTarget = process.env['API_URL'] || 'http://localhost:8080';
+console.log('API_URL configurada:', apiTarget);
 app.use('/api', createProxyMiddleware({
   target: apiTarget,
   changeOrigin: true,
