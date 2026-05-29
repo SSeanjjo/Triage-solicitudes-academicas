@@ -14,5 +14,4 @@ COPY package*.json ./
 RUN npm install --omit=dev
 EXPOSE 4000
 ENV PORT=4000
-ENV API_URL=http://backend:8080
 CMD ["node", "dist/frontend/server/server.mjs"]
