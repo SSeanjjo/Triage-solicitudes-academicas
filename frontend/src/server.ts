@@ -16,11 +16,17 @@ const angularApp = new AngularNodeAppEngine();
 const apiTarget = process.env['API_URL'] || 'http://localhost:8080';
 console.log('API_URL configurada:', apiTarget);
 
-app.use('/api', createProxyMiddleware({
+app.use('/api', (req, _res, next) => {
+  req.headers['host'] = new URL(apiTarget).hostname;
+  next();
+}, createProxyMiddleware({
   target: apiTarget,
   changeOrigin: true,
   proxyTimeout: 15000,
   on: {
+    proxyReq: (proxyReq) => {
+      proxyReq.setHeader('origin', apiTarget);
+    },
     error: (_err, _req, res) => {
       const response = res as express.Response;
       if (typeof response.status === 'function') {
@@ -39,8 +45,7 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  // Forzar el host permitido para evitar el error de SSR
-  req.headers['host'] = 'localhost';
+  req.headers['host'] = 'triage-frontend-y623.onrender.com';
   angularApp
     .handle(req)
     .then((response) =>
