@@ -72,6 +72,13 @@
         </mat-card>
 
         <!-- Actions card -->
+        @if (solicitud()!.estado === 'CERRADA') {
+          <mat-card class="actions-card">
+            <mat-card-content>
+              <p style="color: #888; margin: 0;"><mat-icon style="vertical-align:middle">lock</mat-icon> Esta solicitud está cerrada. No hay acciones disponibles.</p>
+            </mat-card-content>
+          </mat-card>
+        }
         @if (canClasificar() || canAsignar() || canAtender() || canCerrar()) {
           <mat-card class="actions-card">
             <mat-card-header>

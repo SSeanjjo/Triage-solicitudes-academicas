@@ -49,6 +49,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (request.getCorreo() != null) {
             usuario.setCorreo(request.getCorreo());
         }
+        if (request.getRol() != null) {
+            usuario.setRol(request.getRol());
+        }
+        if (request.getActivo() != null) {
+            usuario.setActivo(request.getActivo());
+        }
 
         usuarioRepository.save(usuario);
         return mapearResponse(usuario);

@@ -1,5 +1,6 @@
 package co.edu.uniquindio.gestion_solicitudes.dto.request;
 
+import co.edu.uniquindio.gestion_solicitudes.domain.Rol;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -39,4 +40,10 @@ public class UsuarioUpdateRequest {
      */
     @Email(message = "El correo no tiene formato válido")
     private String correo;
+
+    /** Nuevo rol del usuario. Si es nulo, el rol actual no se modifica. */
+    private Rol rol;
+
+    /** Estado de activación del usuario. Si es nulo, el estado actual no se modifica. */
+    private Boolean activo;
 }
