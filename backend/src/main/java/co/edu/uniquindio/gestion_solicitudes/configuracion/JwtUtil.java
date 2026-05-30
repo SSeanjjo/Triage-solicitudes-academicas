@@ -1,8 +1,9 @@
 package co.edu.uniquindio.gestion_solicitudes.configuracion;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -15,10 +16,6 @@ import java.util.Date;
  * como subject y el rol como claim adicional. Los tokens tienen una validez
  * de 10 horas desde su emisión.
  * </p>
- * <p>
- * La clave de firma se genera aleatoriamente en cada arranque del servidor,
- * por lo que los tokens previos quedan inválidos al reiniciar.
- * </p>
  *
  * @author Manu-Z
  * @version 1.0
@@ -26,7 +23,12 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    private Key getKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
     private final long EXPIRACION = 1000 * 60 * 60 * 10; // 10 horas
 
     /**
@@ -42,7 +44,7 @@ public class JwtUtil {
                 .claim("rol", rol)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRACION))
-                .signWith(key)
+                .signWith(getKey())
                 .compact();
     }
 
@@ -54,23 +56,17 @@ public class JwtUtil {
      */
     public String obtenerCorreo(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
     }
 
-    /**
-     * Extrae el rol del claim del token JWT.
-     *
-     * @param token token JWT válido
-     * @return rol del usuario como String
-     */
     public boolean validarToken(String token) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(getKey())
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -78,16 +74,10 @@ public class JwtUtil {
             return false;
         }
     }
-    /**
-     * Valida que el token JWT sea auténtico y no haya expirado.
-     *
-     * @param token token JWT a validar
-     * @return {@code true} si el token es válido, {@code false} si está
-     *         expirado, mal formado o firmado con otra clave
-     */
+
     public String obtenerRol(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()

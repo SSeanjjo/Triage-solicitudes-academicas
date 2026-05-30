@@ -6,13 +6,14 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { apiUrlInterceptor } from './core/interceptors/api-url.interceptor';
+import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(),
-    provideHttpClient(withInterceptors([apiUrlInterceptor, authInterceptor])),
+    provideHttpClient(withInterceptors([apiUrlInterceptor, authInterceptor, authErrorInterceptor])),
     provideAnimationsAsync(),
   ],
 };
